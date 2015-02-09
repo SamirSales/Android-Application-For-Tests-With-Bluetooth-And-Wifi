@@ -52,6 +52,11 @@ public class MainActivity extends Activity implements Observer {
         String msg = editText.getText().toString();
         Log.i("teste", "mensagem:"+msg);
         editText.setText("");
+        newLineTextView("Enviado:"+msg);
+    }
+
+    private void newLineTextView(String text){
+        textRecebido.setText(textRecebido.getText().toString()+text+"\n");
     }
 
     public void initConnection() {
@@ -122,16 +127,30 @@ public class MainActivity extends Activity implements Observer {
 
     @Override
     public void update(byte[] data) {
-
+        //TODO
+        newLineTextView("Recebido:"+data);
     }
 
     @Override
     public void connectedCallback() {
-
+        new Thread() {
+            public void run() {
+                while (communication != null && communication.isConnected()) {
+                    //Log.i("connection", "connection - connectedCallback()");
+                    byte data[] = new byte[]{1,1,1,0,0,0,1,1};
+                    communication.send(data);
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
     }
 
     @Override
     public void connectedFault() {
-
+        initConnection();
     }
 }

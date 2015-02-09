@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -17,6 +18,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.view.View;
 import android.widget.AdapterView;
@@ -56,9 +58,9 @@ public class Bluetooth implements Communication {
         handler = new Handler();
 
         dialogWaitConnection = new ProgressDialog(context);
-//        dialogWaitConnection.setIcon(R.drawable.icon_alert);
-//        dialogWaitConnection.setTitle(context.getString(R.string.aguarde_progress));
-//        dialogWaitConnection.setMessage(context.getString(R.string.conexao_wifi));
+        dialogWaitConnection.setIcon(R.drawable.ic_launcher);
+        dialogWaitConnection.setTitle("Aguarde!");
+        dialogWaitConnection.setMessage("conectando...");
         dialogWaitConnection.setCanceledOnTouchOutside(false);
         dialogWaitConnection.setCancelable(false);
         dialogWaitConnection.setIndeterminate(false);
@@ -172,6 +174,7 @@ public class Bluetooth implements Communication {
      * Verifica o bluetooth esta com a conexao aberta
      * @return
      */
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
     public boolean isConnected() {
         return socket != null && socket.isConnected();
@@ -380,6 +383,7 @@ public class Bluetooth implements Communication {
          * a conexao bluetooth foi aberta.
          * @param result a conexao socket blutooth
          */
+        @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         protected void onPostExecute(BluetoothSocket result) {
             if (result != null && result.isConnected()) {
                 socket = result;
