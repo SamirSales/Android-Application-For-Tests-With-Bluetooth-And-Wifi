@@ -3,6 +3,8 @@ package com.example.samir.comunicacaodedispositivos;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -26,6 +28,7 @@ public class MainActivity extends Activity implements Observer {
     private EditText editText;
     private Button btnSend;
     private TextView textRecebido;
+    private TextView textConnected;
 
     private static boolean connectionStarted;
     private Communication communication = null;
@@ -40,19 +43,29 @@ public class MainActivity extends Activity implements Observer {
         editText = (EditText)findViewById(R.id.editText);
         btnSend = (Button)findViewById(R.id.btnSend);
         textRecebido = (TextView)findViewById(R.id.textRecebido);
+        textConnected = (TextView)findViewById(R.id.textConnected);
     }
 
     @Override
     public void onStart(){
         super.onStart();
-        initConnection();
     }
 
     public void sendMessageAction(View view){
         String msg = editText.getText().toString();
-        Log.i("teste", "mensagem:"+msg);
         editText.setText("");
         newLineTextView("Enviado:"+msg);
+
+        communication.send(msg.getBytes());
+    }
+
+    public void conectarAction(View view){
+        initConnection();
+    }
+
+    public void irParaTestesImagens(View view){
+        Intent intent = new Intent(this, TestImagens.class);
+        startActivity(intent);
     }
 
     private void newLineTextView(String text){
@@ -136,15 +149,29 @@ public class MainActivity extends Activity implements Observer {
         new Thread() {
             public void run() {
                 while (communication != null && communication.isConnected()) {
-                    //Log.i("connection", "connection - connectedCallback()");
-                    byte data[] = new byte[]{1,1,1,0,0,0,1,1};
-                    communication.send(data);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textConnected.setText("conectado");
+                            textConnected.setTextColor(Color.GREEN);
+                        }
+                    });
+
                     try {
                         sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        textConnected.setText("desconectado");
+                        textConnected.setTextColor(Color.GRAY);
+                    }
+                });
+
             }
         }.start();
     }

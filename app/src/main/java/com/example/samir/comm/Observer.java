@@ -6,7 +6,6 @@ package com.example.samir.comm;
 public interface Observer {
     public void update(byte[] data);
     public void connectedCallback();
-
     public void connectedFault();
 }
 

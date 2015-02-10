@@ -20,6 +20,7 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -106,7 +107,8 @@ public class Bluetooth implements Communication {
                         for (int i = 0; i < tamanho; i++) {
                             pacote[i] = (byte) inputStream.read();
                         }
-                        verificaPacote(pacote);
+                        String str = new String(pacote);
+                        Log.i("teste","teste:"+str);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -174,7 +176,7 @@ public class Bluetooth implements Communication {
      * Verifica o bluetooth esta com a conexao aberta
      * @return
      */
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+
     @Override
     public boolean isConnected() {
         return socket != null && socket.isConnected();
@@ -187,7 +189,7 @@ public class Bluetooth implements Communication {
     public void showBluetoothDialog() {
         final Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.paired_devices_list);
-        dialog.setCancelable(false);
+        dialog.setCancelable(true);
         dialog.setCanceledOnTouchOutside(false);
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter
                 .getDefaultAdapter();
@@ -265,10 +267,10 @@ public class Bluetooth implements Communication {
     public void notifyObservers(byte[] data) {
         if (data != null) {
 //            if (P.checksum(data)) {
-//                for (Observer o : observers) {
-//                    o.update(data);
-//                }
-//            }TODO
+                for (Observer o : observers) {
+                    o.update(data);
+                }
+//            }
         }
     }
 
@@ -295,6 +297,7 @@ public class Bluetooth implements Communication {
                         flagArmazena = false;
 
                         //notifyObservers(P.copy(pacote)); TODO
+                        Log.i("teste", "teste notify observers");
                     }
                 }
             }

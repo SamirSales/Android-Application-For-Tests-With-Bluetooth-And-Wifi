@@ -30,12 +30,45 @@
         android:textSize="20sp"
         android:onClick="sendMessageAction"/>
 
+    <Button
+        android:id="@+id/conectar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:textSize="20sp"
+        android:text="CONECTAR"
+        android:onClick="conectarAction"/>
+
+    <Button
+        android:id="@+id/testImagens"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/conectar"
+        android:layout_alignParentRight="true"
+        android:text="teste de imagens"
+        android:textSize="20sp"
+        android:onClick="irParaTestesImagens"/>
+
+    <TextView
+        android:id="@+id/textConnected"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="desconectado"
+        android:textSize="20sp"/>
+
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_below="@+id/btnSend"
         android:layout_marginTop="10dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/testImagens"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
 
         <TextView
             android:id="@+id/textRecebido"
