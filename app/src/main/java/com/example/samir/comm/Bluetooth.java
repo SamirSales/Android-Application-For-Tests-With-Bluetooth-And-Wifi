@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -15,6 +16,7 @@ import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -86,8 +88,7 @@ public class Bluetooth implements Communication {
 //        if (config.getConexao() == EnumConexao.NULL) {
             showBluetoothDialog();
 //        } else {
-//            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter
-//                    .getDefaultAdapter();
+//            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 //            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(config.getUuid());
 //            new ConnectionTask(device).execute();
 //        }
@@ -191,10 +192,8 @@ public class Bluetooth implements Communication {
         dialog.setContentView(R.layout.paired_devices_list);
         dialog.setCancelable(true);
         dialog.setCanceledOnTouchOutside(false);
-        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter
-                .getDefaultAdapter();
-        Set<BluetoothDevice> pairedDevicesSet = mBluetoothAdapter
-                .getBondedDevices();
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        Set<BluetoothDevice> pairedDevicesSet = mBluetoothAdapter.getBondedDevices();
         final ArrayList<BluetoothDevice> pairedDevices = new ArrayList<BluetoothDevice>();
         ArrayAdapter<String> pairedDevicesAdapter = new ArrayAdapter<String>(
                 context, android.R.layout.simple_list_item_1);
@@ -226,12 +225,10 @@ public class Bluetooth implements Communication {
             pairedDevicesLV.setBackgroundColor(Color.LTGRAY);
             pairedDevicesLV.setOnItemClickListener(new OnItemClickListener() {
                 @Override
-                public void onItemClick(AdapterView<?> parent, View view,
-                                        int position, long id) {
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     BluetoothDevice device = pairedDevices.get(position);
                     new ConnectionTask(device).execute();
                     dialog.dismiss();
-
                 }
             });
         }

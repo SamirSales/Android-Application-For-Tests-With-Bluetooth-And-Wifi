@@ -16,11 +16,11 @@
         android:textSize="30sp"
         android:textColor="#FFFFFF"/>
 
-    <ImageView
-        android:id="@+id/imageSwipe"
+    <android.support.v4.view.ViewPager
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/pager"
         android:layout_width="320dp"
         android:layout_height="320dp"
-        android:layout_centerInParent="true"
-        android:background="@drawable/image1"/>
+        android:layout_centerInParent="true" />
 
 </RelativeLayout>
