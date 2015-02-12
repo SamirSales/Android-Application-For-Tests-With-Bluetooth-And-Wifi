@@ -31,17 +31,22 @@ import com.example.samir.constantes.EnumConexao;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.UUID;
 
 
 public class MainActivity extends Activity implements Observer {
+
+    private String TAG = "MainActivity";
 
     private EditText editText;
     private Button btnSend;
     private TextView textRecebido;
     private TextView textConnected;
 
+    private static ConnectedThread connectedThreadServer;
     private static boolean connectionStarted;
+    private boolean como_servidor;
     private Communication communication = null;
 
     private AcceptThread aTh;
@@ -51,7 +56,7 @@ public class MainActivity extends Activity implements Observer {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        teste();
+        connectedThreadServer = null;
         connectionStarted = false;
 
         editText = (EditText)findViewById(R.id.editText);
@@ -67,10 +72,22 @@ public class MainActivity extends Activity implements Observer {
 
     public void sendMessageAction(View view){
         String msg = editText.getText().toString();
-        editText.setText("");
-        newLineTextView("Enviado:"+msg);
+        if(como_servidor){
+            //TODO
+            if(connectedThreadServer != null){
+                byte[] bytes = msg.getBytes();
+                connectedThreadServer.write(bytes);
+                editText.setText("");
+                newLineTextView("Enviado:"+msg);
+            }
+        }else{
+            editText.setText("");
+            newLineTextView("Enviado:"+msg);
 
-        communication.send(msg.getBytes());
+            communication.send(msg.getBytes());
+        }
+
+
     }
 
     public void conectarAction(View view){
@@ -79,11 +96,13 @@ public class MainActivity extends Activity implements Observer {
         builder.setMessage("Conectar-se como...");
         builder.setPositiveButton("cliente", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
+                como_servidor = false;
                 initConnection();
             }
         });
         builder.setNegativeButton("servidor", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
+                como_servidor = true;
                aTh  = new AcceptThread();
                 aTh.start();
             }
@@ -145,7 +164,7 @@ public class MainActivity extends Activity implements Observer {
     @Override
     public void update(byte[] data) {
         //TODO
-        newLineTextView("Recebido:"+data);
+        newLineTextView("Recebido:"+new String(data));
     }
 
     @Override
@@ -157,7 +176,7 @@ public class MainActivity extends Activity implements Observer {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textConnected.setText("conectado");
+                            textConnected.setText("cliente conectado");
                             textConnected.setTextColor(Color.GREEN);
                         }
                     });
@@ -188,58 +207,117 @@ public class MainActivity extends Activity implements Observer {
     private class AcceptThread extends Thread {
         private final BluetoothServerSocket mmServerSocket;
 
+        private boolean thread_ativa;
+
         public AcceptThread() {
             // Use a temporary object that is later assigned to mmServerSocket,
             // because mmServerSocket is final
+            thread_ativa = false;
             BluetoothServerSocket tmp = null;
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             try {
                 // MY_UUID is the app's UUID string, also used by the client code
-                
+
                 tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("nome", UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
-            } catch (IOException e) { }
+                Log.i(TAG,"mBluetoothAdapter OK...");
+            } catch (IOException e) {
+                //TODO
+                Log.i(TAG,"mBluetoothAdapter failed");
+                Toast.makeText(MainActivity.this,"mBluetoothAdapter failed",Toast.LENGTH_SHORT).show();
+            }
             mmServerSocket = tmp;
         }
 
         public void run() {
             BluetoothSocket socket = null;
             // Keep listening until exception occurs or a socket is returned
-            Log.i("bluetooth server","thread iniciada");
+            Log.i(TAG,"thread de espera iniciada...");
             while (true) {
                 try {
+                    Log.i(TAG,"Esperando conexão...");
                     socket = mmServerSocket.accept();
-                    Log.i("bluetooth server","Uma conexão estabelecida");
-                    Toast.makeText(MainActivity.this,"Uma conexão estabelecida", Toast.LENGTH_SHORT).show();
+                    Log.i(TAG,"servidor conectado");
+                    thread_ativa = true;
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textConnected.setText("servidor conectado");
+                            textConnected.setTextColor(Color.GREEN);
+                        }
+                    });
+
                 } catch (IOException e) {
-                    Log.i("bluetooth server",e.getMessage());
+                    Log.i(TAG,"Uma conexão FAILED");
+                    Log.i(TAG,e.getMessage());
                     break;
                 }
                 // If a connection was accepted
                 if (socket != null) {
                     // Do work to manage the connection (in a separate thread)
-                    //manageConnectedSocket(socket);
-                    try {
-                        Log.i("bluetooth server","socket != null -> close();");
-                        mmServerSocket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    break;
+                    manageConnectedSocket(socket);
+//                    try {
+//                        Log.i(TAG,"socket != null -> close();");
+//                        mmServerSocket.close();
+//                        Log.i(TAG,"mmServerSocket.close(); OK");
+//                    } catch (IOException e) {
+//                        Log.i(TAG,"mmServerSocket.close(); FAILED");
+//                        e.printStackTrace();
+//                    }
+//                    break;
                 }
-                Log.i("bluetooth server","procurando conexão...");
+
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+            Log.i(TAG,"thread terminada!");
+        }
+
+        private void manageConnectedSocket(BluetoothSocket socket) {
+            final ArrayList<String> arrayMessage = new ArrayList<String>();
+            connectedThreadServer =  new ConnectedThread(socket, arrayMessage);
+            connectedThreadServer.start();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while(true){
+
+                        for(int i=0; i<arrayMessage.size();i++){
+                            final String str = arrayMessage.get(i);
+                            //TODO
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    newLineTextView("Recebido:"+str);
+                                }
+                            });
+                            arrayMessage.remove(i);
+                            if(i>-1){
+                                i--;
+                            }
+                        }
+
+                        try {
+                            Thread.sleep(800);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
         }
 
         /** Will cancel the listening socket, and cause the thread to finish */
         public void cancel() {
             try {
                 mmServerSocket.close();
-            } catch (IOException e) { }
+                Log.i(TAG,"mmServerSocket.close(); OK");
+            } catch (IOException e) {
+                Log.i(TAG,"mmServerSocket.close(); FAILED");
+            }
         }
     }
 

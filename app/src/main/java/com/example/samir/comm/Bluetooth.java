@@ -109,7 +109,9 @@ public class Bluetooth implements Communication {
                             pacote[i] = (byte) inputStream.read();
                         }
                         String str = new String(pacote);
-                        Log.i("teste","teste:"+str);
+                        //TODO
+                        Log.i("Bluetooth","teste:"+str);
+                        notifyObservers(pacote);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -178,6 +180,7 @@ public class Bluetooth implements Communication {
      * @return
      */
 
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
     public boolean isConnected() {
         return socket != null && socket.isConnected();
@@ -341,18 +344,23 @@ public class Bluetooth implements Communication {
         private BluetoothSocket connect() {
             BluetoothSocket socket = null;
             try {
-                Method m = device.getClass().getMethod("createRfcommSocket", new Class[] {int.class});
-                socket = (BluetoothSocket) m.invoke(device, 1);
+//                Method m = device.getClass().getMethod("createRfcommSocket", new Class[] {int.class});
+//                socket = (BluetoothSocket) m.invoke(device, 1);
+
+                //Samir...
+                socket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
                 socket.connect();
+                Log.i("Bluetooth","Cliente conectado com sucesso!");
             } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                Log.i("Bluetooth",e.getMessage());
             }
+//            catch (InvocationTargetException e) {
+//                e.printStackTrace();
+//            } catch (NoSuchMethodException e) {
+//                e.printStackTrace();
+//            } catch (IllegalAccessException e) {
+//                e.printStackTrace();
+//            }
             return socket;
         }
 
