@@ -46,7 +46,7 @@ public class MainActivity extends Activity implements Observer {
 
     private static ConnectedThread connectedThreadServer;
     private static boolean connectionStarted;
-    private boolean como_servidor;
+    private boolean working_as_server;
     private Communication communication = null;
 
     private AcceptThread aTh;
@@ -72,8 +72,8 @@ public class MainActivity extends Activity implements Observer {
 
     public void sendMessageAction(View view){
         String msg = editText.getText().toString();
-        if(como_servidor){
-            //TODO
+        if(working_as_server){
+
             if(connectedThreadServer != null){
                 byte[] bytes = msg.getBytes();
                 connectedThreadServer.write(bytes);
@@ -83,11 +83,8 @@ public class MainActivity extends Activity implements Observer {
         }else{
             editText.setText("");
             newLineTextView("Enviado:"+msg);
-
             communication.send(msg.getBytes());
         }
-
-
     }
 
     public void conectarAction(View view){
@@ -96,13 +93,13 @@ public class MainActivity extends Activity implements Observer {
         builder.setMessage("Conectar-se como...");
         builder.setPositiveButton("cliente", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                como_servidor = false;
+                working_as_server = false;
                 initConnection();
             }
         });
         builder.setNegativeButton("servidor", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                como_servidor = true;
+                working_as_server = true;
                aTh  = new AcceptThread();
                 aTh.start();
             }
@@ -121,10 +118,7 @@ public class MainActivity extends Activity implements Observer {
 
     public void initConnection() {
         if(!connectionStarted){
-            Log.i("teste", "Starting bluetooth connection...");
-
             iniciarComunicacao(EnumConexao.BLUETOOTH);
-
             connectionStarted = true;
         }
     }
@@ -163,7 +157,6 @@ public class MainActivity extends Activity implements Observer {
 
     @Override
     public void update(byte[] data) {
-        //TODO
         newLineTextView("Recebido:"+new String(data));
     }
 
@@ -194,7 +187,6 @@ public class MainActivity extends Activity implements Observer {
                         textConnected.setTextColor(Color.GRAY);
                     }
                 });
-
             }
         }.start();
     }
@@ -217,26 +209,17 @@ public class MainActivity extends Activity implements Observer {
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             try {
                 // MY_UUID is the app's UUID string, also used by the client code
-
                 tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("nome", UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
-                Log.i(TAG,"mBluetoothAdapter OK...");
-            } catch (IOException e) {
-                //TODO
-                Log.i(TAG,"mBluetoothAdapter failed");
-                Toast.makeText(MainActivity.this,"mBluetoothAdapter failed",Toast.LENGTH_SHORT).show();
-            }
+            } catch (IOException e) { }
             mmServerSocket = tmp;
         }
 
         public void run() {
             BluetoothSocket socket = null;
             // Keep listening until exception occurs or a socket is returned
-            Log.i(TAG,"thread de espera iniciada...");
             while (true) {
                 try {
-                    Log.i(TAG,"Esperando conexão...");
                     socket = mmServerSocket.accept();
-                    Log.i(TAG,"servidor conectado");
                     thread_ativa = true;
                     runOnUiThread(new Runnable() {
                         @Override
@@ -247,23 +230,12 @@ public class MainActivity extends Activity implements Observer {
                     });
 
                 } catch (IOException e) {
-                    Log.i(TAG,"Uma conexão FAILED");
-                    Log.i(TAG,e.getMessage());
+                    Log.e(TAG,e.getMessage());
                     break;
                 }
                 // If a connection was accepted
                 if (socket != null) {
-                    // Do work to manage the connection (in a separate thread)
                     manageConnectedSocket(socket);
-//                    try {
-//                        Log.i(TAG,"socket != null -> close();");
-//                        mmServerSocket.close();
-//                        Log.i(TAG,"mmServerSocket.close(); OK");
-//                    } catch (IOException e) {
-//                        Log.i(TAG,"mmServerSocket.close(); FAILED");
-//                        e.printStackTrace();
-//                    }
-//                    break;
                 }
 
                 try {
@@ -287,7 +259,7 @@ public class MainActivity extends Activity implements Observer {
 
                         for(int i=0; i<arrayMessage.size();i++){
                             final String str = arrayMessage.get(i);
-                            //TODO
+
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -295,9 +267,7 @@ public class MainActivity extends Activity implements Observer {
                                 }
                             });
                             arrayMessage.remove(i);
-                            if(i>-1){
-                                i--;
-                            }
+                            if(i>-1){ i--; }
                         }
 
                         try {
@@ -314,9 +284,8 @@ public class MainActivity extends Activity implements Observer {
         public void cancel() {
             try {
                 mmServerSocket.close();
-                Log.i(TAG,"mmServerSocket.close(); OK");
             } catch (IOException e) {
-                Log.i(TAG,"mmServerSocket.close(); FAILED");
+                Log.e(TAG,e.getMessage());
             }
         }
     }
@@ -326,40 +295,6 @@ public class MainActivity extends Activity implements Observer {
         super.onStop();
         if(aTh != null){
             aTh.cancel();
-        }
-    }
-
-    public void teste(){
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-
-        Method getUuidsMethod = null;
-        try {
-            getUuidsMethod = BluetoothAdapter.class.getDeclaredMethod("getUuids", null);
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-
-        /*
-        samsung
-        0000111f-0000-1000-8000-00805f9b34fb
-        00001112-0000-1000-8000-00805f9b34fb
-        0000110a-0000-1000-8000-00805f9b34fb
-
-        motorola
-        00001112-0000-1000-8000-00805f9b34fb
-         */
-
-        ParcelUuid[] uuids = new ParcelUuid[0];
-        try {
-            uuids = (ParcelUuid[]) getUuidsMethod.invoke(adapter, null);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
-
-        for (ParcelUuid uuid: uuids) {
-            Log.d("teste", "UUID: " + uuid.getUuid().toString());
         }
     }
 

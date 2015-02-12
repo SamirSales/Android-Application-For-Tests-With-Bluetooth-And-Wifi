@@ -49,7 +49,6 @@ public class ConnectedThread  extends Thread {
                 // Send the obtained bytes to the UI activity
                 String str = new String (buffer);
                 arrayMessage.add(str);
-                Log.i("MainActivity",str.substring(0,bytes));
             } catch (IOException e) {
                 break;
             }

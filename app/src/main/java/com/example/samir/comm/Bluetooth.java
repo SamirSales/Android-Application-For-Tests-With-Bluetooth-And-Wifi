@@ -109,8 +109,6 @@ public class Bluetooth implements Communication {
                             pacote[i] = (byte) inputStream.read();
                         }
                         String str = new String(pacote);
-                        //TODO
-                        Log.i("Bluetooth","teste:"+str);
                         notifyObservers(pacote);
                     }
                 } catch (Exception e) {
@@ -266,11 +264,9 @@ public class Bluetooth implements Communication {
     @Override
     public void notifyObservers(byte[] data) {
         if (data != null) {
-//            if (P.checksum(data)) {
-                for (Observer o : observers) {
-                    o.update(data);
-                }
-//            }
+            for (Observer o : observers) {
+                o.update(data);
+            }
         }
     }
 
@@ -295,9 +291,6 @@ public class Bluetooth implements Communication {
 
                     if (pacoteBuffer[i] == 0x03) {
                         flagArmazena = false;
-
-                        //notifyObservers(P.copy(pacote)); TODO
-                        Log.i("teste", "teste notify observers");
                     }
                 }
             }
@@ -344,23 +337,11 @@ public class Bluetooth implements Communication {
         private BluetoothSocket connect() {
             BluetoothSocket socket = null;
             try {
-//                Method m = device.getClass().getMethod("createRfcommSocket", new Class[] {int.class});
-//                socket = (BluetoothSocket) m.invoke(device, 1);
-
-                //Samir...
                 socket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
                 socket.connect();
-                Log.i("Bluetooth","Cliente conectado com sucesso!");
             } catch (IOException e) {
-                Log.i("Bluetooth",e.getMessage());
+                Log.e("Bluetooth",e.getMessage());
             }
-//            catch (InvocationTargetException e) {
-//                e.printStackTrace();
-//            } catch (NoSuchMethodException e) {
-//                e.printStackTrace();
-//            } catch (IllegalAccessException e) {
-//                e.printStackTrace();
-//            }
             return socket;
         }
 
@@ -395,11 +376,6 @@ public class Bluetooth implements Communication {
         protected void onPostExecute(BluetoothSocket result) {
             if (result != null && result.isConnected()) {
                 socket = result;
-//                AppConfigDB db = new AppConfigDB(context);
-//                db.open();
-//                db.setUUID(device.getAddress());
-//                db.setConexao(EnumConexao.BLUETOOTH);
-//                db.close();
 
                 try {
                     inputStream = socket.getInputStream();
