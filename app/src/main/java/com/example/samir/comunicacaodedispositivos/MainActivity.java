@@ -65,11 +65,6 @@ public class MainActivity extends Activity implements Observer {
         textConnected = (TextView)findViewById(R.id.textConnected);
     }
 
-    @Override
-    public void onStart(){
-        super.onStart();
-    }
-
     public void sendMessageAction(View view){
         String msg = editText.getText().toString();
         if(working_as_server){

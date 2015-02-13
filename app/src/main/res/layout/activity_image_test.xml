@@ -23,4 +23,33 @@
         android:layout_height="320dp"
         android:layout_centerInParent="true" />
 
+    <Button
+        android:id="@+id/serverBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:text="servidor"
+        android:onClick="buttonActionServer"/>
+
+    <Button
+        android:id="@+id/clientBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="cliente"
+        android:onClick="buttonActionClient"/>
+
+    <TextView
+        android:id="@+id/textConectado"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true"
+        android:text="CONECTADO"
+        android:textSize="25sp"
+        android:textColor="#00FF00"
+        android:visibility="invisible"/>
+
 </RelativeLayout>
