@@ -2,15 +2,11 @@ package com.example.samir.comunicacaodedispositivos;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Color;
-import android.os.ParcelUuid;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -19,23 +15,18 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.samir.adapter.AdapterListModos;
-import com.example.samir.adapter.Item;
 import com.example.samir.comm.Communication;
 import com.example.samir.comm.CommunicationFactory;
 import com.example.samir.comm.Observer;
 import com.example.samir.constantes.EnumConexao;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
 
 
-public class MainActivity extends Activity implements Observer {
+public class BluetoothChat extends Activity implements Observer {
 
     private String TAG = "MainActivity";
 
@@ -102,11 +93,6 @@ public class MainActivity extends Activity implements Observer {
         builder.show();
     }
 
-    public void irParaTestesImagens(View view){
-        Intent intent = new Intent(this, TestImagens.class);
-        startActivity(intent);
-    }
-
     private void newLineTextView(String text){
         textRecebido.setText(textRecebido.getText().toString()+text+"\n");
     }
@@ -120,7 +106,7 @@ public class MainActivity extends Activity implements Observer {
 
     public void iniciarComunicacao(EnumConexao con) {
         communication = new CommunicationFactory(this, con).getCommunication();
-        communication.addObserver(MainActivity.this);
+        communication.addObserver(BluetoothChat.this);
         communication.open();
     }
 
