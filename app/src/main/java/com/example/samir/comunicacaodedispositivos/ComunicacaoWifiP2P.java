@@ -6,6 +6,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -33,7 +35,7 @@ public class ComunicacaoWifiP2P extends Activity {
 
     private WiFiDirectBroadcastReceiver receiver;
 
-    private List peers = new ArrayList();
+    private ArrayList<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
 
     private WifiP2pManager.PeerListListener peerListListener;
 
@@ -104,10 +106,11 @@ public class ComunicacaoWifiP2P extends Activity {
                     }
                 };
 
-                //peerListListener.
-
+                //imprime o nome dos disositivos
                 for(int i=0; i<peers.size(); i++){
-                    Log.i(TAG,"peer: "+peers.get(i).toString());
+                    WifiP2pDevice wDev = (WifiP2pDevice) peers.get(i);
+                    //Log.i(TAG,"peer: "+peers.get(i).toString());
+                    Log.i(TAG,"peer: "+wDev.deviceName);
                 }
             }
 
@@ -117,7 +120,33 @@ public class ComunicacaoWifiP2P extends Activity {
                 // Alert the user that something went wrong.
                 Toast.makeText(ComunicacaoWifiP2P.this, "Falha ao procurar dispositivo!", Toast.LENGTH_LONG).show();
             }
+
+
         });
+
+        if(peers.size()>0){
+            WifiP2pDevice device = peers.get(0);
+
+            WifiP2pConfig config = new WifiP2pConfig();
+            config.deviceAddress = device.deviceAddress;
+            config.wps.setup = WpsInfo.PBC;
+
+            mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+
+                @Override
+                public void onSuccess() {
+                    // WiFiDirectBroadcastReceiver will notify us. Ignore for now.
+                    Log.i(TAG,"Pedido de conexao realizado com sucesso!!!");
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    Toast.makeText(ComunicacaoWifiP2P.this, "Connect failed. Retry.",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
     }
 
     class WiFiDirectBroadcastReceiver extends BroadcastReceiver{
