@@ -47,6 +47,8 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 break;
             case 2:
                 //Testes P2P Wifi
+                Intent intent2 = new Intent(this, ComunicacaoWifiP2P.class);
+                startActivity(intent2);
                 break;
             default:
                 break;
