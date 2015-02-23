@@ -17,6 +17,37 @@
         android:textSize="30sp"
         android:textColor="#000000"/>
 
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/helloworld"
+        android:layout_marginTop="13dp"/>
+
+    <Button
+        android:id="@+id/send_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/editText"
+        android:layout_marginTop="13dp"
+        android:text="enviar"
+        android:onClick="sendMessageAction"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/send_btn"
+        android:layout_above="@+id/search_btn"
+        android:layout_marginTop="13dp">
+
+        <TextView
+            android:id="@+id/textRecebido"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textColor="#000000"/>
+    </ScrollView>
+
     <Button
         android:id="@+id/search_btn"
         android:layout_width="wrap_content"
@@ -24,4 +55,13 @@
         android:layout_alignParentBottom="true"
         android:text="procurar dispositivos"
         android:onClick="procurarDispositivosBtn"/>
+
+    <Button
+        android:id="@+id/client_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="client"
+        android:onClick="clientActionBtn"/>
 </RelativeLayout>

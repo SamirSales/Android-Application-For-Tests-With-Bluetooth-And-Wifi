@@ -20,10 +20,18 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +42,9 @@ import java.util.List;
 public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.ConnectionInfoListener{
 
     private final String TAG = "ComunicacaoWifiP2P";
+
+    EditText editText;
+    TextView textRecebido;
 
     private final IntentFilter intentFilter = new IntentFilter();
     private WifiP2pManager.Channel mChannel;
@@ -47,11 +58,22 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
     private WifiP2pManager.PeerListListener peerListListener;
 
+    private WifiServerThread wifiServerThread;
+    private ConnectServerWifi connectServerWifi;
+
+    private WifiClientThread wifiClientThread;
+
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
     public void onCreate(Bundle bundle){
         super.onCreate(bundle);
         setContentView(R.layout.comm_wifi_p2p);
+
+        wifiServerThread = null;
+        wifiClientThread = null;
+
+        editText = (EditText)findViewById(R.id.editText);
+        textRecebido = (TextView)findViewById(R.id.textRecebido);
 
         //  Indicates a change in the Wi-Fi P2P status.
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -83,13 +105,52 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
         unregisterReceiver(receiver);
     }
 
-    public void procurarDispositivosBtn(View view){
-        fetchListOfPeers();
-        listaDePeersWifiDialog();
+    @Override
+    public void onStop(){
+        super.onStop();
+        if(wifiServerThread != null){
+            wifiServerThread.serverRunning = false;
+            wifiServerThread = null;
+        }
+
+        if(wifiClientThread != null){
+            wifiClientThread.running = false;
+            wifiClientThread = null;
+        }
     }
 
-    //TODO
-    private void listaDePeersWifiDialog(){
+    public void procurarDispositivosBtn(View view){
+        fetchListOfPeers();
+        listOfPeersWifiDialog();
+
+        if(wifiServerThread == null){
+            wifiServerThread = new WifiServerThread();
+            wifiServerThread.start();
+        }
+    }
+
+    public void clientActionBtn(View view){
+        if(wifiClientThread == null){
+            wifiClientThread = new WifiClientThread();
+            wifiClientThread.start();
+        }
+    }
+
+    public void sendMessageAction(View view){
+        if(wifiClientThread == null && wifiServerThread != null){
+            //server
+        }else{
+            if(wifiClientThread != null && wifiServerThread == null){
+                //client
+            }
+        }
+    }
+
+    public void updateTextView(String text){
+        textRecebido.setText(textRecebido.getText().toString() + text + "\n");
+    }
+
+    private void listOfPeersWifiDialog(){
         if(peers.size()>0){
             final Dialog dialog = new Dialog(this);
             dialog.setContentView(R.layout.paired_devices_list);
@@ -123,6 +184,8 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 }
             });
             dialog.show();
+        }else{
+            Toast.makeText(this,"Nenhum par encontrado ainda! Tente de novo, daqui a pouco!",Toast.LENGTH_LONG).show();
         }
     }
 
@@ -165,23 +228,28 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     private void connectToAPeer(WifiP2pDevice device){
 
-            WifiP2pConfig config = new WifiP2pConfig();
-            config.deviceAddress = device.deviceAddress;
-            config.wps.setup = WpsInfo.PBC;
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = device.deviceAddress;
+        config.wps.setup = WpsInfo.PBC;
 
-            mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+        Log.i(TAG, "device.deviceAddress="+device.deviceAddress.toString());
+        Log.i(TAG, "device.deviceAddress="+device.deviceAddress);
+        Log.i(TAG, "device.wps.setup="+config.wps.setup);
+        Log.i(TAG, "device.wps.setup="+config.toString());
 
-                @Override
-                public void onSuccess() {
+        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+
+            @Override
+            public void onSuccess() {
                     Log.i(TAG,"Pedido de conexao realizado com sucesso!!!");
                 }
 
-                @Override
-                public void onFailure(int reason) {
-                    Toast.makeText(ComunicacaoWifiP2P.this, "Connect failed. Retry.",
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
+            @Override
+            public void onFailure(int reason) {
+                Toast.makeText(ComunicacaoWifiP2P.this, "Connect failed. Retry.",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     /*
@@ -226,8 +294,10 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
                 if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
                     wifiP2pEnabled = true;
+                    Log.i(TAG, "wifiP2pEnabled = true;");
                 } else {
                     wifiP2pEnabled = false;
+                    Log.i(TAG, "wifiP2pEnabled = false;");
                 }
 
             } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
@@ -241,14 +311,131 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
                 // Connection state changed!  We should probably do something about
                 // that.
+                Log.i(TAG, "WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION");
 
             } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
 //            DeviceListFragment fragment = (DeviceListFragment) activity.getFragmentManager()
 //                    .findFragmentById(R.id.frag_list);
 //            fragment.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(
 //                    WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
+                Log.i(TAG, "WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
 
             }
+        }
+    }
+
+    private class WifiServerThread extends Thread {
+        boolean serverRunning;
+        boolean connectionEnabled;
+        InputStream inputstream;
+        OutputStream outputStream;
+        Socket client;
+
+        public WifiServerThread(){
+            serverRunning = false;
+            connectionEnabled = false;
+        }
+
+        @Override
+        public void run(){
+            ServerSocket serverSocket = null;
+            try {
+                serverSocket = new ServerSocket(8888);
+                Log.i(TAG, "server host 8888 started...");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            serverRunning = true;
+            while(serverRunning){
+                try {
+                    Log.i(TAG, "server is waiting for connection...");
+                    client = serverSocket.accept();
+                    inputstream = client.getInputStream();
+                    outputStream = client.getOutputStream();
+                    connectionEnabled = true;
+                    Log.i(TAG, "thread server recebeu conexao!");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                trataPacotesServer(client);
+
+
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        private void trataPacotesServer(Socket socket){
+
+            final ArrayList<String> arrayMessage = new ArrayList<String>();
+            connectServerWifi =  new ConnectServerWifi(socket, arrayMessage);
+            connectServerWifi.start();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while(true){
+
+                        for(int i=0; i<arrayMessage.size();i++){
+                            final String str = arrayMessage.get(i);
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateTextView("Recebido:"+str);
+                                }
+                            });
+                            arrayMessage.remove(i);
+                            if(i>-1){ i--; }
+                        }
+
+                        try {
+                            Thread.sleep(800);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
+        }
+    }
+
+
+
+
+    private class WifiClientThread extends Thread {
+        boolean running;
+        boolean connectionEnabled;
+        Socket socket;
+        OutputStream outputStream;
+        InputStream inputStream;
+
+
+        public WifiClientThread(){
+            running = false;
+            connectionEnabled = false;
+        }
+
+        @Override
+        public void run(){
+            try {
+                socket = new Socket();
+                socket.bind(null);
+                socket.connect((new InetSocketAddress("36:be:00:9b:bd:c1", 8888)), 500);
+
+                outputStream = socket.getOutputStream();
+                inputStream = socket.getInputStream();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
         }
     }
 }
