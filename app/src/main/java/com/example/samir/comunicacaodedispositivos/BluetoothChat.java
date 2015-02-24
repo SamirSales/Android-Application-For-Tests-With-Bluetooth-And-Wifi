@@ -47,6 +47,8 @@ public class BluetoothChat extends Activity implements Observer {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         connectedThreadServer = null;
         connectionStarted = false;
 

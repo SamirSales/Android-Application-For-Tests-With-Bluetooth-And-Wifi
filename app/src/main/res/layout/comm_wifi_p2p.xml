@@ -6,7 +6,9 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    android:background="#DDFF11">
+    android:background="#DDFF11"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
 
     <TextView
         android:id="@+id/helloworld"
@@ -53,7 +55,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="procurar dispositivos"
+        android:text="buscar"
         android:onClick="procurarDispositivosBtn"/>
 
     <Button
@@ -64,4 +66,24 @@
         android:layout_alignParentRight="true"
         android:text="client"
         android:onClick="clientActionBtn"/>
+
+    <Button
+        android:id="@+id/server_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="server"
+        android:onClick="serverActionBtn"/>
+
+    <TextView
+        android:id="@+id/textStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/server_btn"
+        android:background="#000000"
+        android:textSize="18sp"
+        android:textColor="#00FF00"
+        android:text="..."
+        android:gravity="center"/>
 </RelativeLayout>
