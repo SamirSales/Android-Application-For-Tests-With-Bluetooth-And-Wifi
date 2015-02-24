@@ -82,7 +82,7 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
         editText = (EditText)findViewById(R.id.editText);
         textRecebido = (TextView)findViewById(R.id.textRecebido);
         textStatus = (TextView)findViewById(R.id.textStatus);
-        search_btn = (Button)findViewById(R.id.serverBtn);
+        search_btn = (Button)findViewById(R.id.search_btn);
         server_btn = (Button)findViewById(R.id.server_btn);
         client_btn = (Button)findViewById(R.id.client_btn);
 
@@ -124,8 +124,6 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
     public void procurarDispositivosBtn(View view){
         fetchListOfPeers();
         listOfPeersWifiDialog();
-
-
     }
 
     public void clientActionBtn(View view){
@@ -145,6 +143,12 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
             @Override
             public void run() {
                 textStatus.setText("server:"+IP_SERVER+" porta:"+HOST);
+                client_btn.setVisibility(View.INVISIBLE);
+                search_btn.setVisibility(View.INVISIBLE);
+                server_btn.setVisibility(View.INVISIBLE);
+                client_btn.setEnabled(false);
+                search_btn.setEnabled(false);
+                server_btn.setEnabled(false);
             }
         });
     }
@@ -310,8 +314,7 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
             } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
 
-                // Connection state changed!  We should probably do something about
-                // that.
+                // Connection state changed!  We should probably do something about that.
                 Log.i(TAG, "WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION");
 
             } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
@@ -326,30 +329,20 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
     }
 
 
-
-
-
-
-
-    //TextView info, infoip, msg;
     String message = "";
     ServerSocket serverSocket;
 
     private class SocketServerThread extends Thread {
-
-        static final int SocketServerPORT = 8080;
         int count = 0;
 
         @Override
         public void run() {
             try {
-                serverSocket = new ServerSocket(SocketServerPORT);
+                serverSocket = new ServerSocket(HOST);
                 ComunicacaoWifiP2P.this.runOnUiThread(new Runnable() {
-
                     @Override
                     public void run() {
-                        textRecebido.setText("I'm waiting here: "
-                                + serverSocket.getLocalPort());
+                        textRecebido.setText("I'm waiting here: "+serverSocket.getLocalPort());
                         updateStatusOfConnection();
                     }
                 });
@@ -357,19 +350,17 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 while (true) {
                     Socket socket = serverSocket.accept();
                     count++;
-                    message += "#" + count + " from " + socket.getInetAddress()
-                            + ":" + socket.getPort() + "\n";
+                    message += "#"+count+" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
 
                     ComunicacaoWifiP2P.this.runOnUiThread(new Runnable() {
-
                         @Override
                         public void run() {
                             textRecebido.setText(message);
                         }
                     });
 
-                    SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread(
-                            socket, count);
+                    SocketServerReplyThread socketServerReplyThread =
+                            new SocketServerReplyThread(socket, count);
                     socketServerReplyThread.run();
 
                 }
@@ -397,11 +388,11 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 PrintStream printStream = new PrintStream(outputStream);
                 printStream.print(msgReply);
                 printStream.close();
+                updateStatusOfConnection();
 
                 message += "replayed: " + msgReply + "\n";
 
                 ComunicacaoWifiP2P.this.runOnUiThread(new Runnable() {
-
                     @Override
                     public void run() {
                         textRecebido.setText(message);
@@ -438,8 +429,7 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                     InetAddress inetAddress = enumInetAddress.nextElement();
 
                     if (inetAddress.isSiteLocalAddress()) {
-                        ip += "SiteLocalAddress: "
-                                + inetAddress.getHostAddress() + "\n";
+                        ip += "SiteLocalAddress: " + inetAddress.getHostAddress() + "\n";
                     }
                 }
             }
@@ -487,11 +477,9 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 }
 
             } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 response = "UnknownHostException: " + e.toString();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
             }finally{
@@ -499,7 +487,6 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                     try {
                         socket.close();
                     } catch (IOException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }
