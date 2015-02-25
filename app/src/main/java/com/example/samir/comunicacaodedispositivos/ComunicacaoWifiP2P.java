@@ -33,14 +33,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 
 /**
  * Created by samir on 19/02/15.
@@ -66,6 +62,11 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
     private boolean wifiP2pEnabled;
 
+    MyClientTask myClientTask;
+    ArrayList<String> arrayMessage;
+
+    SocketServerThread socketServerThread;
+
     private WiFiDirectBroadcastReceiver receiver;
 
     private ArrayList<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
@@ -78,6 +79,10 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
     public void onCreate(Bundle bundle){
         super.onCreate(bundle);
         setContentView(R.layout.comm_wifi_p2p);
+
+        arrayMessage = new ArrayList<>();
+        socketServerThread = null;
+        myClientTask = null;
 
         editText = (EditText)findViewById(R.id.editText);
         textRecebido = (TextView)findViewById(R.id.textRecebido);
@@ -127,22 +132,34 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
     }
 
     public void clientActionBtn(View view){
-        MyClientTask myClientTask = new MyClientTask(IP_SERVER,HOST);
-        myClientTask.execute();
+        //TODO
+        if(myClientTask != null && socketServerThread == null){
+
+        }
+        try {
+            myClientTask = new MyClientTask(IP_SERVER,HOST,arrayMessage);
+            myClientTask.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void serverActionBtn(View view){
-        Thread socketServerThread = new Thread(new SocketServerThread());
+        socketServerThread = new SocketServerThread();
         socketServerThread.start();
     }
 
     public void updateStatusOfConnection(){
         final String ip = Utils.getIPAddress(true);
+        avisoConexao("server:"+IP_SERVER+" porta:"+HOST);
+    }
 
+    public void avisoConexao(final String mgs){
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                textStatus.setText("server:"+IP_SERVER+" porta:"+HOST);
+                textStatus.setText(mgs);
                 client_btn.setVisibility(View.INVISIBLE);
                 search_btn.setVisibility(View.INVISIBLE);
                 server_btn.setVisibility(View.INVISIBLE);
@@ -155,10 +172,34 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
     public void sendMessageAction(View view){
         //TODO
+        if(myClientTask != null && myClientTask.myClientIsRunning){
+            String msg = editText.getText().toString();
+            msg = msg.trim();
+            if(!msg.equals("")){
+                byte[] bytes = msg.getBytes();
+                myClientTask.write(bytes);
+                editText.setText("");
+            }
+        }
+
+        if (socketServerThread != null){
+            String msg = editText.getText().toString();
+            msg = msg.trim();
+            if(!msg.equals("")){
+                byte[] bytes = msg.getBytes();
+                socketServerThread.write(bytes);
+                editText.setText("");
+            }
+        }
     }
 
-    public void updateTextView(String text){
-        textRecebido.setText(textRecebido.getText().toString() + text + "\n");
+    public void updateTextView(final String text){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textRecebido.setText(textRecebido.getText().toString() + text + "\n");
+            }
+        });
     }
 
     private void listOfPeersWifiDialog(){
@@ -318,10 +359,6 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 Log.i(TAG, "WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION");
 
             } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
-//            DeviceListFragment fragment = (DeviceListFragment) activity.getFragmentManager()
-//                    .findFragmentById(R.id.frag_list);
-//            fragment.updateThisDevice((WifiP2pDevice) intent.getParcelableExtra(
-//                    WifiP2pManager.EXTRA_WIFI_P2P_DEVICE));
                 Log.i(TAG, "WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
 
             }
@@ -334,6 +371,9 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
     private class SocketServerThread extends Thread {
         int count = 0;
+        OutputStream outputStream = null;
+        InputStream inputStream = null;
+        boolean serverRunnig = false;
 
         @Override
         public void run() {
@@ -347,25 +387,89 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                     }
                 });
 
-                while (true) {
-                    Socket socket = serverSocket.accept();
-                    count++;
-                    message += "#"+count+" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
+                if(!serverRunnig){
+                    serverRunnig = true;
 
-                    ComunicacaoWifiP2P.this.runOnUiThread(new Runnable() {
+                    new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            textRecebido.setText(message);
+                            //TODO
+                            int bytes;
+                            byte[] buffer = new byte[1024];
+
+                            Log.i(TAG, "serverRunning... entrando no loop...");
+                            while (serverRunnig){
+
+                                try {
+                                    if(inputStream != null){
+                                        bytes = inputStream.read(buffer);
+                                        Log.i(TAG, "buffer = "+buffer);
+                                    }else{
+                                        Log.i(TAG, "inputStream = null");
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                // Send the obtained bytes to the UI activity
+                                String str = new String (buffer);
+                                Log.i(TAG, "new String (buffer)="+str);
+                                str = str.trim();
+                                buffer = new byte[1024];
+                                arrayMessage.add(str);
+
+                                for(int i=0; i<arrayMessage.size();i++){
+                                    Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
+                                    updateTextView(arrayMessage.get(i));
+                                    arrayMessage.remove(i);
+                                    if(i>-1){ i--; }
+                                }
+
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
                         }
-                    });
+                    }).start();
 
-                    SocketServerReplyThread socketServerReplyThread =
-                            new SocketServerReplyThread(socket, count);
-                    socketServerReplyThread.run();
+                    while (serverRunnig) {
+                        Socket socket = serverSocket.accept();
+                        outputStream = socket.getOutputStream();
+                        inputStream = socket.getInputStream();
 
+                        count++;
+                        message += "#"+count+" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
+
+                        ComunicacaoWifiP2P.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                textRecebido.setText(message);
+                            }
+                        });
+
+                        SocketServerReplyThread socketServerReplyThread =
+                                new SocketServerReplyThread(socket, count);
+                        socketServerReplyThread.run();
+
+                    }
                 }
+
             } catch (IOException e) {e.printStackTrace();}
         }
+
+
+        public void write(byte[] bytes){
+
+            if(outputStream != null){
+                try {
+                    outputStream.write(bytes);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
     }
 
     private class SocketServerReplyThread extends Thread {
@@ -376,6 +480,19 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
         SocketServerReplyThread(Socket socket, int c) {
             hostThreadSocket = socket;
             cnt = c;
+        }
+
+        public void myPrint(String msg){
+            OutputStream outputStream;
+            try {
+                outputStream = hostThreadSocket.getOutputStream();
+                PrintStream printStream = new PrintStream(outputStream);
+                printStream.print(msg);
+                printStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
 
         @Override
@@ -404,7 +521,7 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 message += "Something wrong! " + e.toString() + "\n";
             }
 
-            ComunicacaoWifiP2P.this.runOnUiThread(new Runnable() {
+            runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     textRecebido.setText(message);
@@ -414,133 +531,110 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
     }
 
-    private String getIpAddress() {
-        String ip = "";
-        try {
-            Enumeration<NetworkInterface> enumNetworkInterfaces = null;
-            enumNetworkInterfaces = NetworkInterface.getNetworkInterfaces();
+    public class MyClientTask extends AsyncTask {
 
-            while (enumNetworkInterfaces.hasMoreElements()) {
-                NetworkInterface networkInterface = enumNetworkInterfaces
-                        .nextElement();
-                Enumeration<InetAddress> enumInetAddress = networkInterface
-                        .getInetAddresses();
-                while (enumInetAddress.hasMoreElements()) {
-                    InetAddress inetAddress = enumInetAddress.nextElement();
+        Socket socket;
+        ArrayList<String> arrayMessage;
+        InputStream mmInStream;
+        OutputStream mmOutStream;
 
-                    if (inetAddress.isSiteLocalAddress()) {
-                        ip += "SiteLocalAddress: " + inetAddress.getHostAddress() + "\n";
-                    }
-                }
-            }
-        } catch (SocketException e) {
-            e.printStackTrace();
-            ip += "Something Wrong! " + e.toString() + "\n";
-        }
+        String ip;
+        int porta;
 
-        return ip;
-    }
-
-    public class MyClientTask extends AsyncTask<Void, Void, Void> {
-
-        String dstAddress;
-        int dstPort;
         String response = "";
 
-        MyClientTask(String addr, int port){
-            dstAddress = addr;
-            dstPort = port;
+        //alteracoes...
+        boolean myClientIsRunning;
+        ByteArrayOutputStream byteArrayOutputStream;
+
+        MyClientTask(String ip, int porta, ArrayList<String> arrayMessage) throws IOException {
+            this.ip = ip;
+            this.porta = porta;
+            this.arrayMessage = arrayMessage;
+            myClientIsRunning = false;
+        }
+
+        /* Call this from the main activity to send data to the remote device */
+        public void write(byte[] bytes) {
+            try {
+                mmOutStream.write(bytes);
+            } catch (IOException e) { }
+        }
+
+        /* Call this from the main activity to shutdown the connection */
+        public void cancel() {
+            try {
+                socket.close();
+            } catch (IOException e) { }
         }
 
         @Override
-        protected Void doInBackground(Void... arg0) {
-
-            Socket socket = null;
+        protected Object doInBackground(Object[] params) {
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
 
             try {
-                socket = new Socket(dstAddress, dstPort);
-
-                ByteArrayOutputStream byteArrayOutputStream =
-                        new ByteArrayOutputStream(1024);
-                byte[] buffer = new byte[1024];
-
-                int bytesRead;
-                InputStream inputStream = socket.getInputStream();
-
-    /*
-     * notice:
-     * inputStream.read() will block if no data return
-     */
-                while ((bytesRead = inputStream.read(buffer)) != -1){
-                    byteArrayOutputStream.write(buffer, 0, bytesRead);
-                    response += byteArrayOutputStream.toString("UTF-8");
-                }
-
+                socket = new Socket(ip,porta);
+                tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
             } catch (UnknownHostException e) {
-                e.printStackTrace();
-                response = "UnknownHostException: " + e.toString();
-            } catch (IOException e) {
-                e.printStackTrace();
-                response = "IOException: " + e.toString();
-            }finally{
-                if(socket != null){
+                Log.e(TAG,e.getMessage());
+            } catch(IOException e) {
+                Log.e(TAG,e.getMessage());
+            }
+
+            mmInStream = tmpIn;
+            mmOutStream = tmpOut;
+
+            byte[] buffer = new byte[1024];  // buffer store for the stream
+            int bytes; // bytes returned from read()
+
+            // Keep listening to the InputStream until an exception occurs
+            if(!myClientIsRunning && mmInStream != null){
+
+                if(socketServerThread == null){
+                    avisoConexao("client porta:"+HOST);
+                }
+                //TODO
+                myClientIsRunning = true;
+                Log.i(TAG, "myClientIsRunning... entrando no loop client...");
+                while (myClientIsRunning) {
                     try {
-                        socket.close();
+                        // Read from the InputStream
+                        bytes = mmInStream.read(buffer);
+                        Log.i(TAG, "buffer="+buffer);
+                        // Send the obtained bytes to the UI activity
+                        String str = new String (buffer);
+                        Log.i(TAG, "str="+str);
+                        str = str.trim();
+                        buffer = new byte[1024];
+                        arrayMessage.add(str);
+
                     } catch (IOException e) {
+                        Log.e(TAG, e.getMessage());
+                        Log.e(TAG, "ERROR - LOOP CLIENT QUEBRANDO");
+                        //break;
+                    }
+
+                    for(int i=0; i<arrayMessage.size();i++){
+                        Log.i(TAG, "i="+i+" arrayMessage.get(i)"+arrayMessage.get(i));
+                        updateTextView(arrayMessage.get(i));
+                        arrayMessage.remove(i);
+                        i--;
+                    }
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
+            myClientIsRunning = false;
+            mmInStream = null;
+
             return null;
         }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            textRecebido.setText(response);
-            super.onPostExecute(result);
-        }
-
     }
 
-
-
-
-
-
-
-
-
-
-
-
-//    public static String getMACAddress(String interfaceName) {
-//        try {
-//            List<NetworkInterface> interfaces = Collections
-//                    .list(NetworkInterface.getNetworkInterfaces());
-//
-//            for (NetworkInterface intf : interfaces) {
-//                if (interfaceName != null) {
-//                    if (!intf.getName().equalsIgnoreCase(interfaceName))
-//                        continue;
-//                }
-//                byte[] mac = intf.getHardwareAddress();
-//                if (mac == null)
-//                    return "";
-//                StringBuilder buf = new StringBuilder();
-//                for (int idx = 0; idx < mac.length; idx++)
-//                    buf.append(String.format("%02X:", mac[idx]));
-//                if (buf.length() > 0)
-//                    buf.deleteCharAt(buf.length() - 1);
-//                return buf.toString();
-//            }
-//        } catch (Exception ex) {
-//        } // for now eat exceptions
-//        return "";
-//        /*
-//         * try { // this is so Linux hack return
-//         * loadFileAsString("/sys/class/net/" +interfaceName +
-//         * "/address").toUpperCase().trim(); } catch (IOException ex) { return
-//         * null; }
-//         */
-//    }
 }

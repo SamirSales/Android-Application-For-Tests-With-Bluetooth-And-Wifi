@@ -15,7 +15,6 @@ public class ConnectServerWifi extends Thread {
     private final Socket socket;
     private final InputStream mmInStream;
     private final OutputStream mmOutStream;
-    private Handler mHandler;
     private ArrayList<String> arrayMessage;
 
     public ConnectServerWifi(Socket socket1, ArrayList<String> arrayMessage) {
