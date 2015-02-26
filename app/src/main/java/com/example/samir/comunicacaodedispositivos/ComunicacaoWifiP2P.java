@@ -496,21 +496,12 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                     @Override
                     public void run() {
                         while (true){
-                            //se tiver texto no array, envia e imprime
-//                            for(int i=0; i<arrayMessage.size();i++){
-//                                if(i>=0){
-//                                    Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
-//                                    printStream2.print(arrayMessage.get(i));
-//                                    updateTextView(arrayMessage.get(i));
-//                                    arrayMessage.remove(i);
-//                                    if(i>-1){ i--; }
-//                                }
-//                            }
+
                             if(arrayMessageToSend.size()>0){
                                 for(String str : arrayMessageToSend){
                                     Log.i(TAG, "arrayMessage.get(i)="+str);
                                     printStream2.print(str);
-                                    updateTextView(str);
+                                    updateTextView("Eu: "+str);
                                 }
                                 arrayMessageToSend = new ArrayList<String>();
                             }
@@ -534,22 +525,14 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                                 str = str.trim();
                                 buffer = new byte[1024];
                                 arrayMessageToRead.add(str);
-//                            for(int i=0; i<arrayMessage.size();i++){
-//
-//                                if(arrayMessage.size()>i && i>=0){
-//                                    Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
-//                                    updateTextView(arrayMessage.get(i));
-//                                    arrayMessage.remove(i);
-//                                    if(i>-1){ i--; }
-//                                }
-//                            }
-                                if(arrayMessageToSend.size()>0){
-                                    for(String str2 : arrayMessageToSend){
+
+                                if(arrayMessageToRead.size()>0){
+                                    for(String str2 : arrayMessageToRead){
                                         Log.i(TAG, "arrayMessage.get(i)="+str2);
-                                        printStream2.print(str2);
-                                        updateTextView(str2);
+                                        //printStream2.print(str2);
+                                        updateTextView("Outro usuario: "+str2);
                                     }
-                                    arrayMessageToSend = new ArrayList<String>();
+                                    arrayMessageToRead = new ArrayList<String>();
                                 }
 
                             } catch (IOException e) {
@@ -640,12 +623,14 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 @Override
                 public void run() {
                     while (true){
-                        for(int i=0; i<arrayMessageToSend.size();i++){
-                            updateTextView(arrayMessageToSend.get(i));
-                            Log.i(TAG,"cliente envia = "+arrayMessageToSend.get(i));
-                            printStream.print(arrayMessageToSend.get(i));
-                            arrayMessageToSend.remove(i);
-                            i--;
+
+                        if(arrayMessageToSend.size()>0){
+                            for(String str : arrayMessageToSend){
+                                updateTextView("Eu: "+str);
+                                Log.i(TAG, "cliente envia = " + str);
+                                printStream.print(str);
+                            }
+                            arrayMessageToSend = new ArrayList<String>();
                         }
                     }
                 }
@@ -669,18 +654,10 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                             buffer = new byte[1024];
                             arrayMessageToRead.add(str);
 
-//                            for(int i=0; i<arrayMessage.size();i++){
-//                                updateTextView("recebido: "+arrayMessage.get(i));
-//                                Log.i(TAG,"cliente envia = "+arrayMessage.get(i));
-//                                if(arrayMessage.size()>=i)
-//                                    arrayMessage.remove(i);
-//                                i--;
-//                            }
-
                             if(arrayMessageToRead.size()>0){
                                 for(String str2 : arrayMessageToRead){
                                     Log.i(TAG, "arrayMessage.get(i)="+str2);
-                                    updateTextView(str2);
+                                    updateTextView("Outro usuario: "+str2);
                                 }
                                 arrayMessageToRead = new ArrayList<String>();
                             }
