@@ -172,25 +172,33 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
     public void sendMessageAction(View view){
         //TODO
-        if(myClientTask != null && myClientTask.myClientIsRunning){
-            String msg = editText.getText().toString();
-            msg = msg.trim();
-            if(!msg.equals("")){
-                byte[] bytes = msg.getBytes();
-                myClientTask.write(bytes);
-                editText.setText("");
-            }
+//        if(myClientTask != null && myClientTask.myClientIsRunning){
+//            String msg = editText.getText().toString();
+//            msg = msg.trim();
+//            if(!msg.equals("")){
+//                byte[] bytes = msg.getBytes();
+//                myClientTask.write(bytes);
+//                editText.setText("");
+//            }
+//        }
+//
+//        if (socketServerThread != null){
+//            String msg = editText.getText().toString();
+//            msg = msg.trim();
+//            if(!msg.equals("")){
+//                byte[] bytes = msg.getBytes();
+//                socketServerThread.write(bytes);
+//                editText.setText("");
+//            }
+//        }
+
+        String msg = editText.getText().toString();
+        msg = msg.trim();
+        if(!msg.equals("")){
+            arrayMessage.add("Eu: "+msg);
+            editText.setText("");
         }
 
-        if (socketServerThread != null){
-            String msg = editText.getText().toString();
-            msg = msg.trim();
-            if(!msg.equals("")){
-                byte[] bytes = msg.getBytes();
-                socketServerThread.write(bytes);
-                editText.setText("");
-            }
-        }
     }
 
     public void updateTextView(final String text){
@@ -390,49 +398,9 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                 if(!serverRunnig){
                     serverRunnig = true;
 
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //TODO
-                            int bytes;
-                            byte[] buffer = new byte[1024];
-
-                            Log.i(TAG, "serverRunning... entrando no loop...");
-                            while (serverRunnig){
-
-                                try {
-                                    if(inputStream != null){
-                                        bytes = inputStream.read(buffer);
-                                        Log.i(TAG, "buffer = "+buffer);
-                                    }else{
-                                        Log.i(TAG, "inputStream = null");
-                                    }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                // Send the obtained bytes to the UI activity
-                                String str = new String (buffer);
-                                Log.i(TAG, "new String (buffer)="+str);
-                                str = str.trim();
-                                buffer = new byte[1024];
-                                arrayMessage.add(str);
-
-                                for(int i=0; i<arrayMessage.size();i++){
-                                    Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
-                                    updateTextView(arrayMessage.get(i));
-                                    arrayMessage.remove(i);
-                                    if(i>-1){ i--; }
-                                }
-
-                                try {
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    }).start();
-
+                    /*
+                    Essa eh pra ser a parte onde o servidor fica esperando conexoes
+                     */
                     while (serverRunnig) {
                         Socket socket = serverSocket.accept();
                         outputStream = socket.getOutputStream();
@@ -457,7 +425,6 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
             } catch (IOException e) {e.printStackTrace();}
         }
-
 
         public void write(byte[] bytes){
 
@@ -498,13 +465,15 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
         @Override
         public void run() {
             OutputStream outputStream;
+            InputStream inputStream;
             String msgReply = "Hello from Android, you are #" + cnt;
 
             try {
                 outputStream = hostThreadSocket.getOutputStream();
+                inputStream = hostThreadSocket.getInputStream();
                 PrintStream printStream = new PrintStream(outputStream);
                 printStream.print(msgReply);
-                printStream.close();
+                //printStream.close();
                 updateStatusOfConnection();
 
                 message += "replayed: " + msgReply + "\n";
@@ -515,6 +484,20 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                         textRecebido.setText(message);
                     }
                 });
+
+                //NEWS HERE... TODO
+                while (true){
+                    //se tiver texto no array, envia e imprime
+                    for(int i=0; i<arrayMessage.size();i++){
+                        Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
+                        printStream.print(arrayMessage.get(i));
+                        updateTextView(arrayMessage.get(i));
+                        arrayMessage.remove(i);
+                        if(i>-1){ i--; }
+                    }
+
+                    //se tiver algo no read(), imprime
+                }
 
             } catch (IOException e) {
                 e.printStackTrace();
