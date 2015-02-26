@@ -36,6 +36,7 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 /**
@@ -63,7 +64,8 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
     private boolean wifiP2pEnabled;
 
     MyClientTask myClientTask;
-    ArrayList<String> arrayMessage;
+    ArrayList<String> arrayMessageToRead;
+    ArrayList<String> arrayMessageToSend;
 
     SocketServerThread socketServerThread;
 
@@ -80,7 +82,8 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
         super.onCreate(bundle);
         setContentView(R.layout.comm_wifi_p2p);
 
-        arrayMessage = new ArrayList<>();
+        arrayMessageToRead = new ArrayList<>();
+        arrayMessageToSend = new ArrayList<>();
         socketServerThread = null;
         myClientTask = null;
 
@@ -137,7 +140,7 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
 
         }
         try {
-            myClientTask = new MyClientTask(IP_SERVER,HOST,arrayMessage);
+            myClientTask = new MyClientTask(IP_SERVER,HOST);
             myClientTask.execute();
         } catch (IOException e) {
             e.printStackTrace();
@@ -195,7 +198,7 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
         String msg = editText.getText().toString();
         msg = msg.trim();
         if(!msg.equals("")){
-            arrayMessage.add("Eu: "+msg);
+            arrayMessageToSend.add(msg);
             editText.setText("");
         }
 
@@ -485,19 +488,77 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
                     }
                 });
 
-                //NEWS HERE... TODO
-                while (true){
-                    //se tiver texto no array, envia e imprime
-                    for(int i=0; i<arrayMessage.size();i++){
-                        Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
-                        printStream.print(arrayMessage.get(i));
-                        updateTextView(arrayMessage.get(i));
-                        arrayMessage.remove(i);
-                        if(i>-1){ i--; }
-                    }
+                final PrintStream printStream2 = printStream;
+                final InputStream inputStream2 = inputStream;
 
-                    //se tiver algo no read(), imprime
-                }
+                //NEWS HERE... TODO
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true){
+                            //se tiver texto no array, envia e imprime
+//                            for(int i=0; i<arrayMessage.size();i++){
+//                                if(i>=0){
+//                                    Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
+//                                    printStream2.print(arrayMessage.get(i));
+//                                    updateTextView(arrayMessage.get(i));
+//                                    arrayMessage.remove(i);
+//                                    if(i>-1){ i--; }
+//                                }
+//                            }
+                            if(arrayMessageToSend.size()>0){
+                                for(String str : arrayMessageToSend){
+                                    Log.i(TAG, "arrayMessage.get(i)="+str);
+                                    printStream2.print(str);
+                                    updateTextView(str);
+                                }
+                                arrayMessageToSend = new ArrayList<String>();
+                            }
+
+                        }
+                    }
+                }).start();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        byte[] buffer = new byte[1024];  // buffer store for the stream
+                        int bytes; // bytes returned from read()
+                        //se tiver algo no read(), imprime
+                        while (true){
+                            try {
+                                // Read from the InputStream
+                                bytes = inputStream2.read(buffer);
+                                // Send the obtained bytes to the UI activity
+                                String str = new String (buffer);
+                                str = str.trim();
+                                buffer = new byte[1024];
+                                arrayMessageToRead.add(str);
+//                            for(int i=0; i<arrayMessage.size();i++){
+//
+//                                if(arrayMessage.size()>i && i>=0){
+//                                    Log.i(TAG, "i="+i+" arrayMessage.get(i)="+arrayMessage.get(i));
+//                                    updateTextView(arrayMessage.get(i));
+//                                    arrayMessage.remove(i);
+//                                    if(i>-1){ i--; }
+//                                }
+//                            }
+                                if(arrayMessageToSend.size()>0){
+                                    for(String str2 : arrayMessageToSend){
+                                        Log.i(TAG, "arrayMessage.get(i)="+str2);
+                                        printStream2.print(str2);
+                                        updateTextView(str2);
+                                    }
+                                    arrayMessageToSend = new ArrayList<String>();
+                                }
+
+                            } catch (IOException e) {
+                                Log.e(TAG, e.getMessage());
+                            }
+                        }
+                    }
+                }).start();
+
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -517,7 +578,6 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
     public class MyClientTask extends AsyncTask {
 
         Socket socket;
-        ArrayList<String> arrayMessage;
         InputStream mmInStream;
         OutputStream mmOutStream;
 
@@ -529,11 +589,11 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
         //alteracoes...
         boolean myClientIsRunning;
         ByteArrayOutputStream byteArrayOutputStream;
+        PrintStream printStream;
 
-        MyClientTask(String ip, int porta, ArrayList<String> arrayMessage) throws IOException {
+        MyClientTask(String ip, int porta) throws IOException {
             this.ip = ip;
             this.porta = porta;
-            this.arrayMessage = arrayMessage;
             myClientIsRunning = false;
         }
 
@@ -569,52 +629,67 @@ public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.Conne
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
 
-            byte[] buffer = new byte[1024];  // buffer store for the stream
-            int bytes; // bytes returned from read()
-
-            // Keep listening to the InputStream until an exception occurs
-            if(!myClientIsRunning && mmInStream != null){
-
-                if(socketServerThread == null){
-                    avisoConexao("client porta:"+HOST);
-                }
-                //TODO
-                myClientIsRunning = true;
-                Log.i(TAG, "myClientIsRunning... entrando no loop client...");
-                while (myClientIsRunning) {
-                    try {
-                        // Read from the InputStream
-                        bytes = mmInStream.read(buffer);
-                        Log.i(TAG, "buffer="+buffer);
-                        // Send the obtained bytes to the UI activity
-                        String str = new String (buffer);
-                        Log.i(TAG, "str="+str);
-                        str = str.trim();
-                        buffer = new byte[1024];
-                        arrayMessage.add(str);
-
-                    } catch (IOException e) {
-                        Log.e(TAG, e.getMessage());
-                        Log.e(TAG, "ERROR - LOOP CLIENT QUEBRANDO");
-                        //break;
-                    }
-
-                    for(int i=0; i<arrayMessage.size();i++){
-                        Log.i(TAG, "i="+i+" arrayMessage.get(i)"+arrayMessage.get(i));
-                        updateTextView(arrayMessage.get(i));
-                        arrayMessage.remove(i);
-                        i--;
-                    }
-
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+            if(socketServerThread == null){
+                avisoConexao("client porta:"+HOST);
             }
-            myClientIsRunning = false;
-            mmInStream = null;
+
+            printStream = new PrintStream(mmOutStream);
+
+            //TODO ESCRITA
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true){
+                        for(int i=0; i<arrayMessageToSend.size();i++){
+                            updateTextView(arrayMessageToSend.get(i));
+                            Log.i(TAG,"cliente envia = "+arrayMessageToSend.get(i));
+                            printStream.print(arrayMessageToSend.get(i));
+                            arrayMessageToSend.remove(i);
+                            i--;
+                        }
+                    }
+                }
+            }).start();
+
+            //TODO LEITURA
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    byte[] buffer = new byte[1024];  // buffer store for the stream
+                    int bytes; // bytes returned from read()
+
+                    while (true) {
+                        try {
+                            // Read from the InputStream
+                            bytes = mmInStream.read(buffer);
+                            Log.i(TAG,"bytes = "+bytes);
+                            // Send the obtained bytes to the UI activity
+                            String str = new String (buffer);
+                            str = str.trim();
+                            buffer = new byte[1024];
+                            arrayMessageToRead.add(str);
+
+//                            for(int i=0; i<arrayMessage.size();i++){
+//                                updateTextView("recebido: "+arrayMessage.get(i));
+//                                Log.i(TAG,"cliente envia = "+arrayMessage.get(i));
+//                                if(arrayMessage.size()>=i)
+//                                    arrayMessage.remove(i);
+//                                i--;
+//                            }
+
+                            if(arrayMessageToRead.size()>0){
+                                for(String str2 : arrayMessageToRead){
+                                    Log.i(TAG, "arrayMessage.get(i)="+str2);
+                                    updateTextView(str2);
+                                }
+                                arrayMessageToRead = new ArrayList<String>();
+                            }
+                        } catch (IOException e) {
+                            Log.e(TAG, e.getMessage());
+                        }
+                    }
+                }
+            }).start();
 
             return null;
         }
