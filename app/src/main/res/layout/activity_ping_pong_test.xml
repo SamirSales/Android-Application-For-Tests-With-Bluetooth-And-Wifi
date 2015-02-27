@@ -1,0 +1,75 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:background="#EFEFEF"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <TextView
+        android:id="@+id/helloworld"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:text="Ping Pong Test Wifi P2P"
+        android:textSize="27sp"
+        android:textColor="#0C021A"/>
+
+    <TextView
+        android:id="@+id/textStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/helloworld"
+        android:layout_marginTop="10dp"
+        android:background="#ABABAB"
+        android:textSize="18sp"
+        android:textColor="#121212"
+        android:text="..."
+        android:gravity="center"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/textStatus"
+        android:layout_above="@+id/search_btn"
+        android:layout_marginTop="13dp"
+        android:fadeScrollbars="false">
+
+        <TextView
+            android:id="@+id/textRecebido"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textColor="#000000"/>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/search_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="buscar"
+        android:onClick="procurarDispositivosBtn"/>
+
+    <Button
+        android:id="@+id/client_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="client"
+        android:onClick="clientActionBtn"/>
+
+    <Button
+        android:id="@+id/server_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="server"
+        android:onClick="serverActionBtn"/>
+
+</RelativeLayout>
