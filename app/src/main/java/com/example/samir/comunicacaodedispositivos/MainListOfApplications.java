@@ -24,7 +24,8 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 "Chat Bluetooth",
                 "Imagens + Bluetooth",
                 "Testes P2P Wifi",
-                "Teste Ping-Pong Wifi P2P"};
+                "Teste Ping-Pong Wifi P2P",
+                "Teste Ping-Pong Bluetooth"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, arrayTestes);
 
@@ -55,6 +56,11 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 //Testes P2P Wifi
                 Intent intent3 = new Intent(this, PingPongTest.class);
                 startActivity(intent3);
+                break;
+            case 4:
+                //Testes P2P Wifi
+                Intent intent4 = new Intent(this, PingPongTest.class);
+                startActivity(intent4);
                 break;
             default:
                 break;

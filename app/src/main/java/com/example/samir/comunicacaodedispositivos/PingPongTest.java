@@ -14,8 +14,11 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -82,11 +85,56 @@ public class PingPongTest extends Activity implements WifiP2pManager.ConnectionI
     private WifiP2pManager.PeerListListener peerListListener;
     private ConnectServerWifi connectServerWifi;
 
+    protected PowerManager.WakeLock mWakeLock;
+
+    private int batteryInitPercent;
+    private int batteryPercent;
+
+    String valorDaBatteria;
+
+    private Handler handler = new Handler();
+
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(final Context context, Intent intent) {
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+            Log.i(TAG, "level: " + level + "; scale: " + scale);
+            int percent = (level*100)/scale;
+
+            if(batteryInitPercent==0){
+                batteryInitPercent = percent;
+            }
+            batteryPercent = percent;
+
+            valorDaBatteria = String.valueOf(percent) + "%";
+            handler.post( new Runnable() {
+
+                public void run() {
+                    //Toast.makeText(context, "bateria: "+valorDaBatteria, Toast.LENGTH_SHORT).show();
+                    Log.i("bateria","bateria: "+valorDaBatteria);
+                }
+            });
+
+        }
+    };
+
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
     public void onCreate(Bundle bundle){
         super.onCreate(bundle);
         setContentView(R.layout.activity_ping_pong_test);
+
+        batteryInitPercent = 0;
+        batteryPercent = 0;
+
+        //keep screen on
+        final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+        this.mWakeLock.acquire();
+
+        //bateria
+        this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
         counter = 0;
         counterOfCounter = 0;
@@ -140,6 +188,12 @@ public class PingPongTest extends Activity implements WifiP2pManager.ConnectionI
     @Override
     public void onStop(){
         super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        this.mWakeLock.release();
+        super.onDestroy();
     }
 
     public void procurarDispositivosBtn(View view){
@@ -199,19 +253,25 @@ public class PingPongTest extends Activity implements WifiP2pManager.ConnectionI
 
         if(myClientTask != null || socketServerThread != null){
             if(myClientTask != null){
-                avisoConexao("I'm CLIENT \n" +
+                String str = "I'm CLIENT \n" +
                         "ip server" + IP_SERVER + " host:" + HOST+"\n" +
                         "horario  inicial: "+horarioInicial+"\n"+
                         "horario    final: "+horarioFinal+"\n"+
-                        "loop(s) number = "+counterOfCounter+"\n" +
-                        "last count = "+counter);
+                        "loop(s) number = "+counterOfCounter+"\n"+
+                        "last count = "+counter+"\n"+
+                        "bateria inicial = "+batteryInitPercent+"%"+"\n"+
+                        "bateria agora   = "+batteryPercent+"%";
+                avisoConexao(str);
             }else{
-                avisoConexao("I'm SERVER \n" +
+                String str = "I'm SERVER \n" +
                         "host:" + HOST+"\n" +
                         "horario  inicial: "+horarioInicial+"\n"+
                         "horario    final: "+horarioFinal+"\n"+
                         "loop(s) number = "+counterOfCounter+"\n" +
-                        "last count = "+counter);
+                        "last count = "+counter+"\n"+
+                        "bateria inicial = "+batteryInitPercent+"%\n"+
+                        "bateria agora   = "+batteryPercent+"%";
+                avisoConexao(str);
             }
         }
 
@@ -233,13 +293,29 @@ public class PingPongTest extends Activity implements WifiP2pManager.ConnectionI
         });
     }
 
+    int linhas = 0;
     public void updateTextView(final String text){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textRecebido.setText(textRecebido.getText().toString() + text + "\n");
-            }
-        });
+        if(linhas<6){
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    textRecebido.setText(textRecebido.getText().toString() + text + "\n");
+                }
+            });
+            linhas++;
+        }else{
+            linhas = 0;
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    textRecebido.setText("");
+                    textRecebido.setText(textRecebido.getText().toString() + text + "\n");
+                }
+            });
+            linhas++;
+        }
+
     }
 
     private void listOfPeersWifiDialog(){
