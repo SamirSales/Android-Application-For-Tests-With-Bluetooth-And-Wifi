@@ -58,8 +58,8 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 startActivity(intent3);
                 break;
             case 4:
-                //Testes P2P Wifi
-                Intent intent4 = new Intent(this, PingPongTest.class);
+                //Testes P2P Bluetooth
+                Intent intent4 = new Intent(this, PingPongBlueTest.class);
                 startActivity(intent4);
                 break;
             default:

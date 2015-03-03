@@ -1,13 +1,5 @@
 package com.example.samir.comm;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
@@ -22,17 +14,25 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
 import com.example.samir.comunicacaodedispositivos.R;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 /**
- * Created by samir on 09/02/15.
+ * Created by samir on 03/03/15.
  */
-public class Bluetooth implements Communication {
+public class BluetoothPingTest implements Communication {
     private Activity context;
     private List<Observer> observers;
     private ArrayList<Byte> pacote;
@@ -50,7 +50,7 @@ public class Bluetooth implements Communication {
     private WriterBluetooth writerThread;
     private int errorCounter = 0;
 
-    public Bluetooth(Activity parent) {
+    public BluetoothPingTest(Activity parent) {
         context = parent;
         observers = new ArrayList<Observer>();
         pacote = new ArrayList<Byte>();
@@ -82,7 +82,7 @@ public class Bluetooth implements Communication {
 //        db.close();
 
 //        if (config.getConexao() == EnumConexao.NULL) {
-            showBluetoothDialog();
+        showBluetoothDialog();
 //        } else {
 //            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 //            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(config.getUuid());
@@ -106,6 +106,9 @@ public class Bluetooth implements Communication {
                         }
                         String str = new String(pacote);
                         notifyObservers(pacote);
+
+                        Thread.sleep(300);
+                        send(pacote);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -220,7 +223,7 @@ public class Bluetooth implements Communication {
                     .findViewById(R.id.pairedDevicesListView);
             pairedDevicesLV.setAdapter(pairedDevicesAdapter);
             pairedDevicesLV.setBackgroundColor(Color.LTGRAY);
-            pairedDevicesLV.setOnItemClickListener(new OnItemClickListener() {
+            pairedDevicesLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     BluetoothDevice device = pairedDevices.get(position);
@@ -261,34 +264,15 @@ public class Bluetooth implements Communication {
     public void notifyObservers(byte[] data) {
         if (data != null) {
             for (Observer o : observers) {
+                Log.i("bluetooth server"," recebe:"+new String(data));
                 o.update(data);
-            }
-        }
-    }
 
-    /**
-     * Identifica quando o pacote do protocolo Infolev e' formado
-     *
-     * @param pacoteBuffer
-     */
-    public void verificaPacote(byte[] pacoteBuffer) {
-        // Verifica o pacote
-        for (int i = 0; i < pacoteBuffer.length; i++) {
-            // start byte 02
-
-            if (pacoteBuffer[i] == 0x02) {
-                pacote = new ArrayList<Byte>();
-                flagArmazena = true;
-                pacote.add(pacoteBuffer[i]);
-            } else {
-                if (flagArmazena) {
-                    pacote.add(pacoteBuffer[i]);
-                    // end byte 03
-
-                    if (pacoteBuffer[i] == 0x03) {
-                        flagArmazena = false;
-                    }
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
+                send(data);
             }
         }
     }
@@ -336,7 +320,7 @@ public class Bluetooth implements Communication {
                 socket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
                 socket.connect();
             } catch (IOException e) {
-                Log.e("Bluetooth",e.getMessage());
+                Log.e("Bluetooth", e.getMessage());
             }
             return socket;
         }
@@ -403,6 +387,7 @@ public class Bluetooth implements Communication {
             if (data != null) {
                 try {
                     outputStream.write(data);
+                    Log.i("bluetooth server"," envia:"+new String(data));
                     errorCounter = 0;
                 } catch (Exception e) {
                     errorCounter++;

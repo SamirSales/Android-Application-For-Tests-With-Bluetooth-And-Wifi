@@ -7,7 +7,8 @@ public enum EnumConexao {
     NULL(0),
     BLUETOOTH(1),
     WIFI(2),
-    USB(3);
+    USB(3),
+    BLUETOOTH_PING_TEST(4),;
 
     private int valor;
 

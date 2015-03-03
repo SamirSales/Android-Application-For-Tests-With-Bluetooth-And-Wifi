@@ -254,7 +254,7 @@ public class BluetoothChat extends Activity implements Observer {
                         }
 
                         try {
-                            Thread.sleep(800);
+                            Thread.sleep(300);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }

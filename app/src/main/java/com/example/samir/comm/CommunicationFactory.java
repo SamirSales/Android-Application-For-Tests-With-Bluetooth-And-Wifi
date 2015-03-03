@@ -20,6 +20,8 @@ public class CommunicationFactory {
             //communication = new WiFi(parent);
         } else if (mode == EnumConexao.BLUETOOTH) {
             communication = new Bluetooth(parent);
+        } else if (mode == EnumConexao.BLUETOOTH_PING_TEST) {
+            communication = new BluetoothPingTest(parent);
         }
     }
 
