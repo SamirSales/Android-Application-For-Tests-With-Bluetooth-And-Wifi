@@ -1,4 +1,4 @@
-package com.example.samir.comm;
+package com.example.samir.testOfComunication;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -19,11 +19,12 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.example.samir.comunicacaodedispositivos.R;
+import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.Observer;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

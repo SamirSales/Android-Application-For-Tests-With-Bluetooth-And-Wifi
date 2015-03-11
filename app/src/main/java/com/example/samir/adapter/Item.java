@@ -1,6 +1,6 @@
 package com.example.samir.adapter;
 
-import com.example.samir.constantes.EnumConexao;
+import com.example.samir.comunications.EnumConexao;
 
 /**
  * Created by samir on 09/02/15.

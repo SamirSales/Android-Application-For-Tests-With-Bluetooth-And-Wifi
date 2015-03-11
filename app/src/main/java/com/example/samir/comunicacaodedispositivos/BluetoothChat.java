@@ -16,10 +16,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.samir.comm.Communication;
-import com.example.samir.comm.CommunicationFactory;
-import com.example.samir.comm.Observer;
-import com.example.samir.constantes.EnumConexao;
+import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.CommunicationFactory;
+import com.example.samir.comunications.Observer;
+import com.example.samir.comunications.EnumConexao;
 
 import java.io.IOException;
 import java.util.ArrayList;

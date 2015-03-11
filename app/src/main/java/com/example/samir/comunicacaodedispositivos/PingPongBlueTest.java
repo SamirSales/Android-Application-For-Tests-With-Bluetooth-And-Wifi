@@ -9,7 +9,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.BatteryManager;
 import android.os.Bundle;
@@ -20,11 +19,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.samir.comm.Communication;
-import com.example.samir.comm.CommunicationFactory;
-import com.example.samir.comm.Observer;
-import com.example.samir.comm.Utils;
-import com.example.samir.constantes.EnumConexao;
+import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.CommunicationFactory;
+import com.example.samir.comunications.Observer;
+import com.example.samir.testOfComunication.Utils;
+import com.example.samir.comunications.EnumConexao;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

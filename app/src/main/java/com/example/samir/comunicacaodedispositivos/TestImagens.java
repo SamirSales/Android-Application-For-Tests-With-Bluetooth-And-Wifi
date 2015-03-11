@@ -1,14 +1,10 @@
 package com.example.samir.comunicacaodedispositivos;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.DialogInterface;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.View;
@@ -17,10 +13,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.samir.adapter.MyPagerAdapter;
-import com.example.samir.comm.Communication;
-import com.example.samir.comm.CommunicationFactory;
-import com.example.samir.comm.Observer;
-import com.example.samir.constantes.EnumConexao;
+import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.CommunicationFactory;
+import com.example.samir.comunications.Observer;
+import com.example.samir.comunications.EnumConexao;
 import com.example.samir.objetos.ImagemComStr;
 
 import java.io.IOException;

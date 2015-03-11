@@ -1,4 +1,4 @@
-package com.example.samir.comm;
+package com.example.samir.comunications;
 
 /**
  * Created by samir on 09/02/15.

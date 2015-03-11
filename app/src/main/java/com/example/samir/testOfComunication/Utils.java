@@ -1,4 +1,4 @@
-package com.example.samir.comm;
+package com.example.samir.testOfComunication;
 
 import org.apache.http.conn.util.InetAddressUtils;
 

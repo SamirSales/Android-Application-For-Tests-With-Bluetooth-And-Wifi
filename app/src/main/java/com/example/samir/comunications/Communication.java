@@ -1,4 +1,6 @@
-package com.example.samir.comm;
+package com.example.samir.comunications;
+
+import com.example.samir.comunications.Observer;
 
 /**
  * Created by samir on 09/02/15.

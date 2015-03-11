@@ -1,4 +1,4 @@
-package com.example.samir.comm;
+package com.example.samir.comunications;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,7 @@ import com.example.samir.comunicacaodedispositivos.R;
 /**
  * Created by samir on 09/02/15.
  */
-public class Bluetooth implements Communication {
+public class BluetoothClient implements Communication {
     private Activity context;
     private List<Observer> observers;
     private ArrayList<Byte> pacote;
@@ -50,7 +50,7 @@ public class Bluetooth implements Communication {
     private WriterBluetooth writerThread;
     private int errorCounter = 0;
 
-    public Bluetooth(Activity parent) {
+    public BluetoothClient(Activity parent) {
         context = parent;
         observers = new ArrayList<Observer>();
         pacote = new ArrayList<Byte>();
@@ -75,19 +75,7 @@ public class Bluetooth implements Communication {
      */
     @Override
     public void open() {
-
-//        AppConfigDB db = new AppConfigDB(context);
-//        db.open();
-//        AppConfig config = db.getConfig();
-//        db.close();
-
-//        if (config.getConexao() == EnumConexao.NULL) {
-            showBluetoothDialog();
-//        } else {
-//            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-//            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(config.getUuid());
-//            new ConnectionTask(device).execute();
-//        }
+        showBluetoothDialog();
     }
 
     /**
