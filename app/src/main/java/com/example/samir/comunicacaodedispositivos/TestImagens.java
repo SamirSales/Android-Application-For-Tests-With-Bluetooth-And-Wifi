@@ -81,7 +81,7 @@ public class TestImagens extends Activity implements Observer {
 
     public void initConnection() {
         if(!connectionStarted){
-            iniciarComunicacao(EnumConexao.BLUETOOTH);
+            iniciarComunicacao(EnumConexao.BLUETOOTH_CLIENT);
             connectionStarted = true;
         }
     }

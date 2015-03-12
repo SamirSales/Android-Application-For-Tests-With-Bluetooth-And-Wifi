@@ -2,13 +2,9 @@ package com.example.samir.comunicacaodedispositivos;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,35 +17,25 @@ import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.Observer;
 import com.example.samir.comunications.EnumConexao;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.UUID;
-
 
 public class BluetoothChat extends Activity implements Observer {
 
-    private String TAG = "MainActivity";
+    private String TAG = "BluetoothChat";
 
     private EditText editText;
     private Button btnSend;
     private TextView textRecebido;
     private TextView textConnected;
 
-    private static ConnectedThread connectedThreadServer;
     private static boolean connectionStarted;
     private boolean working_as_server;
     private Communication communication = null;
-
-    private AcceptThread aTh;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
-        connectedThreadServer = null;
         connectionStarted = false;
 
         editText = (EditText)findViewById(R.id.editText);
@@ -58,21 +44,12 @@ public class BluetoothChat extends Activity implements Observer {
         textConnected = (TextView)findViewById(R.id.textConnected);
     }
 
-    public void sendMessageAction(View view){
+    public void sendMessageAction(View view) {
         String msg = editText.getText().toString();
-        if(working_as_server){
+        editText.setText("");
+        newLineTextView("Enviado:" + msg);
+        communication.send(msg.getBytes());
 
-            if(connectedThreadServer != null){
-                byte[] bytes = msg.getBytes();
-                connectedThreadServer.write(bytes);
-                editText.setText("");
-                newLineTextView("Enviado:"+msg);
-            }
-        }else{
-            editText.setText("");
-            newLineTextView("Enviado:"+msg);
-            communication.send(msg.getBytes());
-        }
     }
 
     public void conectarAction(View view){
@@ -82,31 +59,48 @@ public class BluetoothChat extends Activity implements Observer {
         builder.setPositiveButton("cliente", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 working_as_server = false;
-                initConnection();
+                initClientConnection();
             }
         });
         builder.setNegativeButton("servidor", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 working_as_server = true;
-               aTh  = new AcceptThread();
-                aTh.start();
+                initServerConnection();
             }
         });
         builder.show();
     }
 
-    private void newLineTextView(String text){
-        textRecebido.setText(textRecebido.getText().toString()+text+"\n");
+    private void newLineTextView(final String text){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textRecebido.setText(textRecebido.getText().toString()+text+"\n");
+            }
+        });
     }
 
-    public void initConnection() {
+    public void initClientConnection() {
         if(!connectionStarted){
-            iniciarComunicacao(EnumConexao.BLUETOOTH);
+            iniciarComunicacaoModoCliente(EnumConexao.BLUETOOTH_CLIENT);
             connectionStarted = true;
         }
     }
 
-    public void iniciarComunicacao(EnumConexao con) {
+    public void initServerConnection(){
+        if(!connectionStarted){
+            iniciarComunicacaoModoCliente(EnumConexao.BLUETOOTH_SERVER);
+            connectionStarted = true;
+        }
+    }
+
+    public void iniciarComunicacaoModoServidor(EnumConexao con){
+        communication = new CommunicationFactory(this, con).getCommunication();
+        communication.addObserver(BluetoothChat.this);
+        communication.open();
+    }
+
+    public void iniciarComunicacaoModoCliente(EnumConexao con) {
         communication = new CommunicationFactory(this, con).getCommunication();
         communication.addObserver(BluetoothChat.this);
         communication.open();
@@ -152,13 +146,18 @@ public class BluetoothChat extends Activity implements Observer {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textConnected.setText("cliente conectado");
-                            textConnected.setTextColor(Color.GREEN);
+                            if(working_as_server){
+                                textConnected.setText("SERVER");
+                                textConnected.setTextColor(Color.BLUE);
+                            }else{
+                                textConnected.setText("CLIENT");
+                                textConnected.setTextColor(Color.GREEN);
+                            }
                         }
                     });
 
                     try {
-                        sleep(1000);
+                        sleep(3000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -176,109 +175,10 @@ public class BluetoothChat extends Activity implements Observer {
 
     @Override
     public void connectedFault() {
-        initConnection();
-    }
-
-    private class AcceptThread extends Thread {
-        private final BluetoothServerSocket mmServerSocket;
-
-        private boolean thread_ativa;
-
-        public AcceptThread() {
-            // Use a temporary object that is later assigned to mmServerSocket,
-            // because mmServerSocket is final
-            thread_ativa = false;
-            BluetoothServerSocket tmp = null;
-            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-            try {
-                // MY_UUID is the app's UUID string, also used by the client code
-                //UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-                tmp = mBluetoothAdapter.listenUsingRfcommWithServiceRecord("nome", UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
-            } catch (IOException e) { }
-            mmServerSocket = tmp;
-        }
-
-        public void run() {
-            BluetoothSocket socket = null;
-            // Keep listening until exception occurs or a socket is returned
-            while (true) {
-                try {
-                    socket = mmServerSocket.accept();
-                    thread_ativa = true;
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            textConnected.setText("servidor conectado");
-                            textConnected.setTextColor(Color.GREEN);
-                        }
-                    });
-
-                } catch (IOException e) {
-                    Log.e(TAG,e.getMessage());
-                    break;
-                }
-                // If a connection was accepted
-                if (socket != null) {
-                    manageConnectedSocket(socket);
-                }
-
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            Log.i(TAG,"thread terminada!");
-        }
-
-        private void manageConnectedSocket(BluetoothSocket socket) {
-            final ArrayList<String> arrayMessage = new ArrayList<String>();
-            connectedThreadServer =  new ConnectedThread(socket, arrayMessage);
-            connectedThreadServer.start();
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while(true){
-
-                        for(int i=0; i<arrayMessage.size();i++){
-                            final String str = arrayMessage.get(i);
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    newLineTextView("Recebido:"+str);
-                                }
-                            });
-                            arrayMessage.remove(i);
-                            if(i>-1){ i--; }
-                        }
-
-                        try {
-                            Thread.sleep(300);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }).start();
-        }
-
-        /** Will cancel the listening socket, and cause the thread to finish */
-        public void cancel() {
-            try {
-                mmServerSocket.close();
-            } catch (IOException e) {
-                Log.e(TAG,e.getMessage());
-            }
-        }
-    }
-
-    @Override
-    public void onStop(){
-        super.onStop();
-        if(aTh != null){
-            aTh.cancel();
+        if(working_as_server){
+            initServerConnection();
+        }else{
+            initClientConnection();
         }
     }
 

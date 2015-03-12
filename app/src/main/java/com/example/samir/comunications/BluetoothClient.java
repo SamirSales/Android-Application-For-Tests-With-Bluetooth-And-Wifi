@@ -33,6 +33,9 @@ import com.example.samir.comunicacaodedispositivos.R;
  * Created by samir on 09/02/15.
  */
 public class BluetoothClient implements Communication {
+
+    final private String TAG = "BluetoothClient";
+
     private Activity context;
     private List<Observer> observers;
     private ArrayList<Byte> pacote;
@@ -324,7 +327,7 @@ public class BluetoothClient implements Communication {
                 socket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
                 socket.connect();
             } catch (IOException e) {
-                Log.e("Bluetooth",e.getMessage());
+                Log.e(TAG,e.getMessage());
             }
             return socket;
         }

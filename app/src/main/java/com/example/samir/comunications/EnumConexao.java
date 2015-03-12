@@ -5,10 +5,11 @@ package com.example.samir.comunications;
  */
 public enum EnumConexao {
     NULL(0),
-    BLUETOOTH(1),
+    BLUETOOTH_CLIENT(1),
     WIFI(2),
     USB(3),
-    BLUETOOTH_PING_TEST(4),;
+    BLUETOOTH_PING_TEST(4),
+    BLUETOOTH_SERVER(5);
 
     private int valor;
 

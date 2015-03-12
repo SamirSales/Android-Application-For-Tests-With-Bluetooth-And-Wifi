@@ -21,10 +21,12 @@ public class CommunicationFactory {
             //communication = new USB(parent);
         } else if (mode == EnumConexao.WIFI) {
             //communication = new WiFi(parent);
-        } else if (mode == EnumConexao.BLUETOOTH) {
+        } else if (mode == EnumConexao.BLUETOOTH_CLIENT) {
             communication = new BluetoothClient(parent);
         } else if (mode == EnumConexao.BLUETOOTH_PING_TEST) {
             communication = new BluetoothPingTest(parent);
+        } else if (mode == EnumConexao.BLUETOOTH_SERVER) {
+            communication = new BluetoothServer(parent);
         }
     }
 
