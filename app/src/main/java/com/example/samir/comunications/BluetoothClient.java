@@ -82,30 +82,6 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Thread responsavel pela leitura de bytes pelo fluxo de entrada bluetooth
-     */
-    private class ReaderBluetoothThread extends Thread {
-        @Override
-        public void run() {
-            while (isConnected() && inputStream != null) {
-                try {
-                    int tamanho = inputStream.available();
-                    if (tamanho > 0) {
-                        byte[] pacote = new byte[tamanho];
-                        for (int i = 0; i < tamanho; i++) {
-                            pacote[i] = (byte) inputStream.read();
-                        }
-                        String str = new String(pacote);
-                        notifyObservers(pacote);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /**
      * Envia um pacote de dados
      * @param data
      */
@@ -258,33 +234,6 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Identifica quando o pacote do protocolo Infolev e' formado
-     *
-     * @param pacoteBuffer
-     */
-    public void verificaPacote(byte[] pacoteBuffer) {
-        // Verifica o pacote
-        for (int i = 0; i < pacoteBuffer.length; i++) {
-            // start byte 02
-
-            if (pacoteBuffer[i] == 0x02) {
-                pacote = new ArrayList<Byte>();
-                flagArmazena = true;
-                pacote.add(pacoteBuffer[i]);
-            } else {
-                if (flagArmazena) {
-                    pacote.add(pacoteBuffer[i]);
-                    // end byte 03
-
-                    if (pacoteBuffer[i] == 0x03) {
-                        flagArmazena = false;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Metodo que dispara um timer para tentar uma nova conexao com o dispositivo bluetooth
      */
     private void waitAndReconnect() {
@@ -367,12 +316,12 @@ public class BluetoothClient implements Communication {
                 try {
                     inputStream = socket.getInputStream();
                     outputStream = socket.getOutputStream();
+                    new ReaderBluetoothThread().start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
                 writerThread = new WriterBluetooth();
-                new ReaderBluetoothThread().start();
 
                 for (Observer o : observers) {
                     o.connectedCallback();
@@ -381,6 +330,30 @@ public class BluetoothClient implements Communication {
                 fechaDialogo();
             } else {
                 waitAndReconnect();
+            }
+        }
+    }
+
+    /**
+     * Thread responsavel pela leitura de bytes pelo fluxo de entrada bluetooth
+     */
+    private class ReaderBluetoothThread extends Thread {
+        @Override
+        public void run() {
+            while (isConnected() && inputStream != null) {
+                try {
+                    int tamanho = inputStream.available();
+                    if (tamanho > 0) {
+                        byte[] pacote = new byte[tamanho];
+                        for (int i = 0; i < tamanho; i++) {
+                            pacote[i] = (byte) inputStream.read();
+                        }
+                        String str = new String(pacote);
+                        notifyObservers(pacote);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
