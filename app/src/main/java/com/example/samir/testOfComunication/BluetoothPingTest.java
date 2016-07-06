@@ -253,7 +253,7 @@ public class BluetoothPingTest implements Communication {
      * @param o um observador
      */
     @Override
-    public void remObserver(Observer o) {
+    public void removeObserver(Observer o) {
         observers.remove(o);
     }
 

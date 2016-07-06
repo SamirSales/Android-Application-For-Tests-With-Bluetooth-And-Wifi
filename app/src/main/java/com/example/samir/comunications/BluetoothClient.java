@@ -40,8 +40,6 @@ public class BluetoothClient implements Communication {
 
     private Activity context;
     private List<Observer> observers;
-    private ArrayList<Byte> pacote;
-    private boolean flagArmazena;
     private static final int RECONNECTION_TIME = 3000;
     private byte[] data;
     private Runnable runnable;
@@ -57,10 +55,13 @@ public class BluetoothClient implements Communication {
 
     public BluetoothClient(Activity parent) {
         context = parent;
-        observers = new ArrayList<Observer>();
-        pacote = new ArrayList<Byte>();
+        observers = new ArrayList<>();
         handler = new Handler();
 
+        setDialogWaitConnection();
+    }
+
+    private void setDialogWaitConnection(){
         dialogWaitConnection = new ProgressDialog(context);
         dialogWaitConnection.setIcon(R.drawable.ic_launcher);
         dialogWaitConnection.setTitle("Aguarde!");
@@ -72,11 +73,10 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Abertura de conexao.
-     * Caso seja a primeria vez que a conexao e' feita, um dialog com os dispositivos bluetooth
-     * sera' mostrado para escolha de conexao.
-     * Se uma conexao foi feita anteriormente, uma tentativa de conexao
-     * com este dispositivo
+     * Opening connection.
+     * If it is the first time the connection has been done, a dialog with the bluetooth devices
+     * list will be shown as connection options. If the connection has been made previously,
+     * an attempted connection with this device.
      */
     @Override
     public void open() {
@@ -84,7 +84,7 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Envia um pacote de dados
+     * It sends data packets.
      * @param data
      */
     @Override
@@ -98,7 +98,7 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Fecha a conexao bluetooth
+     * Close the bluetooth connection.
      */
     @Override
     public void close() {
@@ -130,7 +130,7 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Reconecta com o dispositivo bluetooth
+     * Reconnect the bluetooth device.
      */
     @Override
     public void reconnect() {
@@ -139,8 +139,8 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Verifica o bluetooth esta com a conexao aberta
-     * @return
+     * It checks the bluetooth connection.
+     * @return true if it is connected.
      */
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -150,19 +150,19 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * O metodo abaixo e' chamado na primeira vez em que a comunicacao bluetooth e feita.
-     * Mostra um dialog com os dispositivos bluetooth pareados para iniciar a comunicacao.
+     * This method calls a dialog that shows a list of paired bluetooth devices. Clicking on one
+     * of the items from the list, the user can choose his device connection option.
      */
     public void showBluetoothDialog() {
         final Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.paired_devices_list);
         dialog.setCancelable(true);
         dialog.setCanceledOnTouchOutside(false);
+
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevicesSet = mBluetoothAdapter.getBondedDevices();
         final ArrayList<BluetoothDevice> pairedDevices = new ArrayList<BluetoothDevice>();
-        ArrayAdapter<String> pairedDevicesAdapter = new ArrayAdapter<String>(
-                context, android.R.layout.simple_list_item_1);
+        ArrayAdapter<String> pairedDevicesAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1);
 
         Button btnBack = (Button) dialog.findViewById(R.id.btnVoltarBluetooth);
         btnBack.setOnClickListener(new View.OnClickListener() {
@@ -175,6 +175,7 @@ public class BluetoothClient implements Communication {
                 System.exit(0);
             }
         });
+
         if (pairedDevicesSet.size() > 0) {
             for (BluetoothDevice device : pairedDevicesSet) {
                 pairedDevices.add(device);
@@ -201,29 +202,18 @@ public class BluetoothClient implements Communication {
         dialog.show();
     }
 
-    /**
-     * Adiciona um observador a lista. As classes de comunicacao usam o observador para:
-     *   - Notificar que a conexao foi aberta
-     *   - Notificar que ocorreu uma falha na conexao
-     *   - Notificar que um pacote foi recebido
-     * @param o um objeto que implementa Observer
-     */
     @Override
     public void addObserver(Observer o) {
         observers.add(o);
     }
 
-    /**
-     * Remove um observador da lista
-     * @param o um observador
-     */
     @Override
-    public void remObserver(Observer o) {
+    public void removeObserver(Observer o) {
         observers.remove(o);
     }
 
     /**
-     * Notifica aos observadores que um pacote Infolev chegou pela transmissao
+     * Notify the observer about a new data package.
      * @param data um array de bytes
      */
     @Override
@@ -236,7 +226,7 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Metodo que dispara um timer para tentar uma nova conexao com o dispositivo bluetooth
+     * This method start a timer to try a new connection with the device.
      */
     private void waitAndReconnect() {
         handler.removeCallbacks(runnable);
@@ -249,17 +239,12 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Classe para conexao bluetooth. Ocorre o disparo de uma tarefa assincrona,
-     * dado um dispositivo bluetooth(classe BluetoothDevice) como parametro.
+     * Class for bluetooth connection. It start an async task by the use of a BluetoothDevice object
+     * as a parameter.
      */
     private class ConnectionTask extends AsyncTask<Void, Void, BluetoothSocket> {
         private BluetoothDevice device;
 
-        /**
-         *
-         * @param device Um dispositivo de bluetooth recebido a partir da lista de dispositivos pareados
-         *
-         */
         public ConnectionTask(BluetoothDevice device) {
             this.device = device;
         }
@@ -269,8 +254,8 @@ public class BluetoothClient implements Communication {
         }
 
         /**
-         * Tanta se conectar ao dispositivo bluetooth.
-         * @return A conexao socket bluetooth. null em caso de falha
+         * Try to connect to the bluetooth device.
+         * @return a bluetooth socket connection or null, if it's fail.
          */
         private BluetoothSocket connect() {
             BluetoothSocket socket = null;
@@ -283,14 +268,14 @@ public class BluetoothClient implements Communication {
             return socket;
         }
 
-        private void fechaDialogo() {
+        private void closeDialog() {
             if (dialogWaitConnection.isShowing()) {
                 dialogWaitConnection.dismiss();
             }
         }
 
         /**
-         * Antes da tarefa iniciar, a janela de dialogo e' exibida
+         * Before the task execution, the dialog is shown.
          */
         protected void onPreExecute() {
             super.onPreExecute();
@@ -305,10 +290,9 @@ public class BluetoothClient implements Communication {
         }
 
         /**
-         * Quanda a tarefa terminar, o metodo testa se a conexao socket foi aberta,
-         * obtem os fluxos de transmissoes, fecha o dialogo e notifica aos observadores que
-         * a conexao bluetooth foi aberta.
-         * @param result a conexao socket blutooth
+         * When the task finish, the method test if the socket connection has been opened, get the
+         * streams, close the dialog and notify the observers about the bluetooth connection opened.
+         * @param result the bluetooth socket connection.
          */
         @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         protected void onPostExecute(BluetoothSocket result) {
@@ -329,7 +313,7 @@ public class BluetoothClient implements Communication {
                     o.connectedCallback();
                 }
 
-                fechaDialogo();
+                closeDialog();
             } else {
                 waitAndReconnect();
             }
@@ -337,21 +321,20 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Thread responsavel pela leitura de bytes pelo fluxo de entrada bluetooth
+     * This thread reads the bytes from input stream.
      */
     private class ReaderBluetoothThread extends Thread {
         @Override
         public void run() {
             while (isConnected() && inputStream != null) {
                 try {
-                    int tamanho = inputStream.available();
-                    if (tamanho > 0) {
-                        byte[] pacote = new byte[tamanho];
-                        for (int i = 0; i < tamanho; i++) {
-                            pacote[i] = (byte) inputStream.read();
+                    int length = inputStream.available();
+                    if (length > 0) {
+                        byte[] bytes = new byte[length];
+                        for (int i = 0; i < length; i++) {
+                            bytes[i] = (byte) inputStream.read();
                         }
-                        String str = new String(pacote);
-                        notifyObservers(pacote);
+                        notifyObservers(bytes);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -361,7 +344,7 @@ public class BluetoothClient implements Communication {
     }
 
     /**
-     * Classe privada para transmissao de dados
+     * This class makes the sending of data packets.
      */
     private class WriterBluetooth implements Runnable {
         @Override

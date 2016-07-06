@@ -1,4 +1,4 @@
-package com.example.samir.devicescommunication;
+package com.example.samir.utils;
 
 import android.annotation.TargetApi;
 import android.os.Build;

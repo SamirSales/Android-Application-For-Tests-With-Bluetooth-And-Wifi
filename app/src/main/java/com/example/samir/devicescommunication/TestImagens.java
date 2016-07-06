@@ -18,6 +18,7 @@ import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.interfaces.Observer;
 import com.example.samir.objects.ImagemComStr;
+import com.example.samir.utils.DepthPageTransformer;
 
 import java.io.IOException;
 import java.util.ArrayList;

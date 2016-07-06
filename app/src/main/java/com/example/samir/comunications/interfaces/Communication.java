@@ -11,6 +11,6 @@ public interface Communication {
     void send(byte data[]);
     boolean isConnected();
     void addObserver(Observer o);
-    void remObserver(Observer o);
+    void removeObserver(Observer o);
     void notifyObservers(byte[] data);
 }
