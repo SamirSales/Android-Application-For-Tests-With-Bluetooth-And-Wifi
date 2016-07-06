@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
 
+import com.example.samir.comunications.interfaces.BluetoothUser;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
 import com.example.samir.devicescommunication.R;
@@ -25,70 +26,26 @@ import java.util.UUID;
 /**
  * Created by Samir Sales on 11/03/15.
  */
-public class BluetoothServer implements Communication {
+public class BluetoothServer extends BluetoothUser {
 
     private final String TAG = "BluetoothServer";
 
-    private Activity context;
-    private List<Observer> observers;
-    private ArrayList<Byte> pacote;
-    private boolean flagArmazena;
-    private static final int RECONNECTION_TIME = 3000;
-    private byte[] data;
-    private Runnable runnable;
-    private Handler handler;
-
     private BluetoothServerSocket bluetoothServerSocket;
-    private InputStream inputStream = null;
-    private OutputStream outputStream = null;
     private boolean connected;
 
-    private ProgressDialog dialogWaitConnection;
-    private WriterBluetooth writerThread;
-    private int errorCounter = 0;
-
     public BluetoothServer(Activity parent) {
-        context = parent;
-        observers = new ArrayList<Observer>();
-        pacote = new ArrayList<Byte>();
-        handler = new Handler();
+        super(parent);
         connected = false;
-
-        dialogWaitConnection = new ProgressDialog(context);
-        dialogWaitConnection.setIcon(R.drawable.ic_launcher);
-        dialogWaitConnection.setTitle("Aguarde!");
-        dialogWaitConnection.setMessage("conectando...");
-        dialogWaitConnection.setCanceledOnTouchOutside(false);
-        dialogWaitConnection.setCancelable(false);
-        dialogWaitConnection.setIndeterminate(false);
-        dialogWaitConnection.setOnCancelListener(null);
     }
 
     @Override
     public void open() {
-        Log.i(TAG, "open() ...");
         new ConnectionTask().execute();
     }
 
     @Override
     public void close() {
-        if (inputStream != null) {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            inputStream = null;
-        }
-        if (outputStream != null) {
-            try {
-                outputStream.flush();
-                outputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            outputStream = null;
-        }
+        super.close();
         if (bluetoothServerSocket != null) {
             try {
                 bluetoothServerSocket.close();
@@ -100,48 +57,9 @@ public class BluetoothServer implements Communication {
     }
 
     @Override
-    public void reconnect() {
-        close();
-        open();
-    }
-
-    @Override
-    public void send(byte[] data) {
-        if (data != null) {
-            this.data = data;
-            if (isConnected()) {
-                writerThread = new WriterBluetooth();
-                new Thread(writerThread).start();
-            }
-        }
-    }
-
-    @Override
     public boolean isConnected() {
-//        Log.i(TAG, "isConnected() bluetoothServerSocket="+bluetoothServerSocket.toString());
-//        Log.i(TAG, "isConnected() connected="+connected);
         return bluetoothServerSocket != null && connected;
     }
-
-    @Override
-    public void addObserver(Observer o) {
-        observers.add(o);
-    }
-
-    @Override
-    public void removeObserver(Observer o) {
-        observers.remove(o);
-    }
-
-    @Override
-    public void notifyObservers(byte[] data) {
-        if (data != null) {
-            for (Observer o : observers) {
-                o.update(data);
-            }
-        }
-    }
-
 
     private class ConnectionTask extends AsyncTask<Void, Void, BluetoothServerSocket> {
         AcceptThread acceptThread;
@@ -172,43 +90,26 @@ public class BluetoothServer implements Communication {
         }
 
         /**
-         * Metodo que dispara um timer para tentar uma nova conexao com o dispositivo bluetooth
-         */
-        private void waitAndReconnect() {
-            handler.removeCallbacks(runnable);
-            runnable = new Runnable() {
-                public void run() {
-                    reconnect();
-                }
-            };
-            handler.postDelayed(runnable, RECONNECTION_TIME);
-        }
-
-        /**
-         * Quanda a tarefa terminar, o metodo testa se a conexao socket foi aberta,
-         * obtem os fluxos de transmissoes, fecha o dialogo e notifica aos observadores que
-         * a conexao bluetooth foi aberta.
-         * @param socket a conexao socket blutooth
+         * When the task finish, the method test if the socket connection has been opened, get the
+         * streams, close the dialog and notify the observers about the bluetooth connection opened.
+         * @param socket the bluetooth socket connection.
          */
         @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         protected void onPostExecute(BluetoothSocket socket) {
-            if (socket != null && connected) {
 
+            if (socket != null && connected) {
                 try {
-                    inputStream = socket.getInputStream();
-                    outputStream = socket.getOutputStream();
+                    setInputStream(socket.getInputStream());
+                    setOutputStream(socket.getOutputStream());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-                writerThread = new WriterBluetooth();
+                resetWriterBluetooth();
                 new ReaderBluetoothThread().start();
 
-                for (Observer o : observers) {
+                for (Observer o : getObservers()) {
                     o.connectedCallback();
                 }
-
-                //fechaDialogo();
             } else {
                 waitAndReconnect();
             }
@@ -216,27 +117,23 @@ public class BluetoothServer implements Communication {
     }
 
     private class AcceptThread extends Thread {
-
         public void run() {
-            BluetoothSocket socket = null;
+            BluetoothSocket socket;
             // Keep listening until exception occurs or a socket is returned
             while (true) {
                 try {
                     socket = bluetoothServerSocket.accept();
-                    //TODO
-                    Log.i(TAG, "a client connected!");
+                    Log.i(TAG, "one client connected!");
                     try {
-                        inputStream = socket.getInputStream();
-                        outputStream = socket.getOutputStream();
-                        Log.i(TAG, "inputStream="+inputStream.toString());
-                        Log.i(TAG, "outputStream="+outputStream.toString());
+                        setInputStream(socket.getInputStream());
+                        setOutputStream(socket.getOutputStream());
                         new ReaderBluetoothThread().start();
                     } catch (IOException e) {
                         e.printStackTrace();
                         Log.e(TAG, e.getMessage());
                     }
                     connected = true;
-                    for (Observer o : observers) {
+                    for (Observer o : getObservers()) {
                         o.connectedCallback();
                     }
                 } catch (IOException e) {
@@ -247,62 +144,15 @@ public class BluetoothServer implements Communication {
             }
         }
 
-        /** Will cancel the listening socket, and cause the thread to finish */
+        /**
+         * It will cancel the socket listening and cause the thread finish.
+         */
         public void cancel() {
             try {
                 bluetoothServerSocket.close();
                 connected = false;
             } catch (IOException e) {
                 Log.e(TAG,e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Classe privada para transmissao de dados
-     */
-    private class WriterBluetooth implements Runnable {
-        @Override
-        public void run() {
-            Log.i(TAG, "WriterBluetooth -> data="+new String(data));
-            if (data != null) {
-                try {
-                    outputStream.write(data);
-                    errorCounter = 0;
-                    Log.i(TAG, "WriterBluetooth -> written... data="+new String(data));
-                } catch (Exception e) {
-                    Log.e(TAG,e.getMessage());
-                    errorCounter++;
-                    if (errorCounter > 20) {
-                        errorCounter = 0;
-                        reconnect();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Thread responsavel pela leitura de bytes pelo fluxo de entrada bluetooth
-     */
-    private class ReaderBluetoothThread extends Thread {
-        @Override
-        public void run() {
-            while (isConnected() && inputStream != null) {
-                try {
-                    int tamanho = inputStream.available();
-                    if (tamanho > 0) {
-                        byte[] pacote = new byte[tamanho];
-                        for (int i = 0; i < tamanho; i++) {
-                            pacote[i] = (byte) inputStream.read();
-                        }
-                        String str = new String(pacote);
-                        notifyObservers(pacote);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.e(TAG,e.getMessage());
-                }
             }
         }
     }
