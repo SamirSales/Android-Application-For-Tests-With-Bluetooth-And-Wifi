@@ -1,31 +1,31 @@
 package com.example.samir.comunications;
 
 /**
- * Created by samir on 09/02/15.
+ * Created by Samir Sales on 09/02/15.
  */
+
 import android.app.Activity;
 
-import com.example.samir.comunications.BluetoothClient;
-import com.example.samir.comunications.Communication;
-import com.example.samir.comunications.EnumConexao;
+import com.example.samir.comunications.enums.EnumConnection;
+import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.testOfComunication.BluetoothPingTest;
 
 public class CommunicationFactory {
-    private EnumConexao mode;
+    private EnumConnection mode;
     private Communication communication;
 
-    public CommunicationFactory(Activity parent, EnumConexao mode) {
+    public CommunicationFactory(Activity parent, EnumConnection mode) {
         this.mode = mode;
         communication = null;
-        if (mode == EnumConexao.USB) {
+        if (mode == EnumConnection.USB) {
             //communication = new USB(parent);
-        } else if (mode == EnumConexao.WIFI) {
+        } else if (mode == EnumConnection.WIFI) {
             //communication = new WiFi(parent);
-        } else if (mode == EnumConexao.BLUETOOTH_CLIENT) {
+        } else if (mode == EnumConnection.BLUETOOTH_CLIENT) {
             communication = new BluetoothClient(parent);
-        } else if (mode == EnumConexao.BLUETOOTH_PING_TEST) {
+        } else if (mode == EnumConnection.BLUETOOTH_PING_TEST) {
             communication = new BluetoothPingTest(parent);
-        } else if (mode == EnumConexao.BLUETOOTH_SERVER) {
+        } else if (mode == EnumConnection.BLUETOOTH_SERVER) {
             communication = new BluetoothServer(parent);
         }
     }

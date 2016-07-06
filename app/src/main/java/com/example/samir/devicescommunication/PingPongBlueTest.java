@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -19,11 +19,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.enums.EnumConnection;
+import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
-import com.example.samir.comunications.Observer;
+import com.example.samir.comunications.interfaces.Observer;
 import com.example.samir.testOfComunication.Utils;
-import com.example.samir.comunications.EnumConexao;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -32,7 +32,7 @@ import java.util.Calendar;
 import java.util.UUID;
 
 /**
- * Created by samir on 02/03/15.
+ * Created by Samir Sales on 02/03/15.
  */
 public class PingPongBlueTest extends Activity implements Observer {
 
@@ -174,12 +174,12 @@ public class PingPongBlueTest extends Activity implements Observer {
 
     public void initConnection() {
         if(!connectionStarted){
-            iniciarComunicacao(EnumConexao.BLUETOOTH_PING_TEST);
+            iniciarComunicacao(EnumConnection.BLUETOOTH_PING_TEST);
             connectionStarted = true;
         }
     }
 
-    public void iniciarComunicacao(EnumConexao con) {
+    public void iniciarComunicacao(EnumConnection con) {
         communication = new CommunicationFactory(this, con).getCommunication();
         communication.addObserver(this);
         communication.open();

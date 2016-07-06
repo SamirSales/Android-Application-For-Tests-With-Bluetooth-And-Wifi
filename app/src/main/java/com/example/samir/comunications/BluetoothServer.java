@@ -11,7 +11,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
 
-import com.example.samir.comunicacaodedispositivos.R;
+import com.example.samir.comunications.interfaces.Communication;
+import com.example.samir.comunications.interfaces.Observer;
+import com.example.samir.devicescommunication.R;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +23,7 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Created by samir on 11/03/15.
+ * Created by Samir Sales on 11/03/15.
  */
 public class BluetoothServer implements Communication {
 

@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -42,7 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 /**
- * Created by samir on 27/02/15.
+ * Created by Samir Sales on 27/02/15.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class PingPongTest extends Activity implements WifiP2pManager.ConnectionInfoListener{

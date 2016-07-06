@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -8,8 +8,16 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.samir.devicescommunication.BluetoothChat;
+import com.example.samir.devicescommunication.BluetoothLowEnergy;
+import com.example.samir.devicescommunication.ComunicacaoWifiP2P;
+import com.example.samir.devicescommunication.PingPongBlueTest;
+import com.example.samir.devicescommunication.PingPongTest;
+import com.example.samir.devicescommunication.R;
+import com.example.samir.devicescommunication.TestImagens;
+
 /**
- * Created by samir on 19/02/15.
+ * Created by Samir Sales on 19/02/15.
  */
 public class MainListOfApplications extends Activity implements AdapterView.OnItemClickListener{
 

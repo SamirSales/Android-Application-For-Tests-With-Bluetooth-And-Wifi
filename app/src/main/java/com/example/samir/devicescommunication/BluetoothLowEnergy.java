@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 /**
- * Created by samir on 24/06/15.
+ * Created by Samir Sales on 24/06/15.
  */
 public class BluetoothLowEnergy extends Activity {
 

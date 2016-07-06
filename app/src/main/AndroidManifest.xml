@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.samir.comunicacaodedispositivos" >
+    package="com.example.samir.devicescommunication" >
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
@@ -17,40 +17,40 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
-        <activity android:name=".MainListOfApplications">
+        <activity android:name="com.example.samir.MainListOfApplications">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".BluetoothChat"
+            android:name="com.example.samir.devicescommunication.BluetoothChat"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity android:name=".TestImagens">
+        <activity android:name="com.example.samir.devicescommunication.TestImagens">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name=".ComunicacaoWifiP2P">
+        <activity android:name="com.example.samir.devicescommunication.ComunicacaoWifiP2P">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name=".PingPongTest">
+        <activity android:name="com.example.samir.devicescommunication.PingPongTest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name=".PingPongBlueTest">
+        <activity android:name="com.example.samir.devicescommunication.PingPongBlueTest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name=".BluetoothLowEnergy">
+        <activity android:name="com.example.samir.devicescommunication.BluetoothLowEnergy">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>

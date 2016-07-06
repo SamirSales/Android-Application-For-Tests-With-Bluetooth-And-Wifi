@@ -1,27 +1,22 @@
-package com.example.samir.comunicacaodedispositivos;
-
-import android.bluetooth.BluetoothSocket;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
+package com.example.samir.devicescommunication;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 
 /**
- * Created by samir on 12/02/15.
+ * Created by Samir Sales on 23/02/15.
  */
-public class ConnectedThread  extends Thread {
-    private final BluetoothSocket mmSocket;
+public class ConnectServerWifi extends Thread {
+    private final Socket socket;
     private final InputStream mmInStream;
     private final OutputStream mmOutStream;
-    private Handler mHandler;
     private ArrayList<String> arrayMessage;
 
-    public ConnectedThread(BluetoothSocket socket, ArrayList<String> arrayMessage) {
-        mmSocket = socket;
+    public ConnectServerWifi(Socket socket1, ArrayList<String> arrayMessage) {
+        socket = socket1;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
         this.arrayMessage = arrayMessage;
@@ -29,8 +24,8 @@ public class ConnectedThread  extends Thread {
         // Get the input and output streams, using temp objects because
         // member streams are final
         try {
-            tmpIn = socket.getInputStream();
-            tmpOut = socket.getOutputStream();
+            tmpIn = socket1.getInputStream();
+            tmpOut = socket1.getOutputStream();
         } catch (IOException e) { }
 
         mmInStream = tmpIn;
@@ -65,7 +60,7 @@ public class ConnectedThread  extends Thread {
     /* Call this from the main activity to shutdown the connection */
     public void cancel() {
         try {
-            mmSocket.close();
+            socket.close();
         } catch (IOException e) { }
     }
 }

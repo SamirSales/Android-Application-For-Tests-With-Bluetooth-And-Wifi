@@ -1,11 +1,9 @@
-package com.example.samir.objetos;
+package com.example.samir.objects;
 
-import android.util.Log;
-
-import com.example.samir.comunicacaodedispositivos.ConnectedThread;
+import com.example.samir.devicescommunication.ConnectedThread;
 
 /**
- * Created by samir on 13/02/15.
+ * Created by Samir Sales on 13/02/15.
  */
 public class ImagemComStr {
 

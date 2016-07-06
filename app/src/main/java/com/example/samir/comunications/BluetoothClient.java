@@ -27,10 +27,12 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
-import com.example.samir.comunicacaodedispositivos.R;
+import com.example.samir.comunications.interfaces.Communication;
+import com.example.samir.comunications.interfaces.Observer;
+import com.example.samir.devicescommunication.R;
 
 /**
- * Created by samir on 09/02/15.
+ * Created by Samir Sales on 09/02/15.
  */
 public class BluetoothClient implements Communication {
 

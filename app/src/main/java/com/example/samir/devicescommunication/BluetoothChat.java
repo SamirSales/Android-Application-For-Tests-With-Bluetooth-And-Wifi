@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,10 +12,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.enums.EnumConnection;
+import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
-import com.example.samir.comunications.Observer;
-import com.example.samir.comunications.EnumConexao;
+import com.example.samir.comunications.interfaces.Observer;
 
 
 public class BluetoothChat extends Activity implements Observer {
@@ -82,25 +82,25 @@ public class BluetoothChat extends Activity implements Observer {
 
     public void initClientConnection() {
         if(!connectionStarted){
-            iniciarComunicacaoModoCliente(EnumConexao.BLUETOOTH_CLIENT);
+            iniciarComunicacaoModoCliente(EnumConnection.BLUETOOTH_CLIENT);
             connectionStarted = true;
         }
     }
 
     public void initServerConnection(){
         if(!connectionStarted){
-            iniciarComunicacaoModoCliente(EnumConexao.BLUETOOTH_SERVER);
+            iniciarComunicacaoModoCliente(EnumConnection.BLUETOOTH_SERVER);
             connectionStarted = true;
         }
     }
 
-    public void iniciarComunicacaoModoServidor(EnumConexao con){
+    public void iniciarComunicacaoModoServidor(EnumConnection con){
         communication = new CommunicationFactory(this, con).getCommunication();
         communication.addObserver(BluetoothChat.this);
         communication.open();
     }
 
-    public void iniciarComunicacaoModoCliente(EnumConexao con) {
+    public void iniciarComunicacaoModoCliente(EnumConnection con) {
         communication = new CommunicationFactory(this, con).getCommunication();
         communication.addObserver(BluetoothChat.this);
         communication.open();

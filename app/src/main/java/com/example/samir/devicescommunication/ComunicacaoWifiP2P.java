@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -39,7 +39,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 /**
- * Created by samir on 19/02/15.
+ * Created by Samir Sales on 19/02/15.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class ComunicacaoWifiP2P extends Activity implements WifiP2pManager.ConnectionInfoListener{

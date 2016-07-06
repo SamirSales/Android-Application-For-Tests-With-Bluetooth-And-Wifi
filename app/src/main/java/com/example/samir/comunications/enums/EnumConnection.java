@@ -1,9 +1,9 @@
-package com.example.samir.comunications;
+package com.example.samir.comunications.enums;
 
 /**
- * Created by samir on 09/02/15.
+ * Created by Samir Sales on 09/02/15.
  */
-public enum EnumConexao {
+public enum EnumConnection {
     NULL(0),
     BLUETOOTH_CLIENT(1),
     WIFI(2),
@@ -13,7 +13,7 @@ public enum EnumConexao {
 
     private int valor;
 
-    EnumConexao(int valor){
+    EnumConnection(int valor){
         this.valor = valor;
     }
 
