@@ -110,7 +110,7 @@ public class PingPongTest extends Activity implements WifiP2pManager.ConnectionI
             handler.post( new Runnable() {
 
                 public void run() {
-                    //Toast.makeText(context, "bateria: "+valorDaBatteria, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(context, "bateria: "+batteryChargingStr, Toast.LENGTH_SHORT).show();
                     Log.i("bateria","bateria: "+valorDaBatteria);
                 }
             });

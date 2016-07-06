@@ -9,7 +9,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.example.samir.devicescommunication.BluetoothChat;
-import com.example.samir.devicescommunication.BluetoothLowEnergy;
 import com.example.samir.devicescommunication.ComunicacaoWifiP2P;
 import com.example.samir.devicescommunication.PingPongBlueTest;
 import com.example.samir.devicescommunication.PingPongTest;
@@ -21,7 +20,7 @@ import com.example.samir.devicescommunication.TestImagens;
  */
 public class MainListOfApplications extends Activity implements AdapterView.OnItemClickListener{
 
-    ListView listView;
+    private ListView listView;
 
     @Override
     public void onCreate(Bundle bundle){
@@ -33,8 +32,8 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 "Imagens + Bluetooth",
                 "Testes P2P Wifi",
                 "Teste Ping-Pong Wifi P2P",
-                "Teste Ping-Pong Bluetooth",
-                "Chat Bluetooth LE"};
+                "Teste Ping-Pong Bluetooth"};
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, arrayTestes);
 
@@ -70,11 +69,6 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 //Testes P2P Bluetooth
                 Intent intent4 = new Intent(this, PingPongBlueTest.class);
                 startActivity(intent4);
-                break;
-            case 5:
-                //Bluetooth Low Energy
-                Intent intent5 = new Intent(this, BluetoothLowEnergy.class);
-                startActivity(intent5);
                 break;
             default:
                 break;

@@ -37,7 +37,7 @@
         android:layout_alignParentBottom="true"
         android:textSize="20sp"
         android:text="CONECTAR"
-        android:onClick="conectarAction"/>
+        android:onClick="connectAction"/>
 
     <TextView
         android:id="@+id/textConnected"

@@ -54,6 +54,6 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:text="conectar"
-        android:onClick="conectarAction"/>
+        android:onClick="connectAction"/>
 
 </RelativeLayout>

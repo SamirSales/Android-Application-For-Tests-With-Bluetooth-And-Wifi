@@ -2,25 +2,16 @@ package com.example.samir.comunications;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Handler;
 import android.util.Log;
 
-import com.example.samir.comunications.interfaces.BluetoothUser;
-import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
-import com.example.samir.devicescommunication.R;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 /**

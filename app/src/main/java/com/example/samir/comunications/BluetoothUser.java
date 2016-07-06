@@ -1,10 +1,12 @@
-package com.example.samir.comunications.interfaces;
+package com.example.samir.comunications;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Handler;
 import android.util.Log;
 
+import com.example.samir.comunications.interfaces.Communication;
+import com.example.samir.comunications.interfaces.Observer;
 import com.example.samir.devicescommunication.R;
 
 import java.io.IOException;
@@ -16,7 +18,7 @@ import java.util.List;
 /**
  * Created by Samir Sales on 06/07/16.
  */
-public abstract class BluetoothUser implements Communication{
+public abstract class BluetoothUser implements Communication {
 
     private final String TAG = "BluetoothUser";
 

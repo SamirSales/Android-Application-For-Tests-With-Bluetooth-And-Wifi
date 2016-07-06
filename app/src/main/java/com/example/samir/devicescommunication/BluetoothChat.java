@@ -24,7 +24,7 @@ public class BluetoothChat extends Activity implements Observer {
 
     private EditText editText;
     private Button btnSend;
-    private TextView textRecebido;
+    private TextView messageReceivedTextView;
     private TextView textConnected;
 
     private static boolean connectionStarted;
@@ -34,13 +34,13 @@ public class BluetoothChat extends Activity implements Observer {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_bluetooth_chat);
 
         connectionStarted = false;
 
         editText = (EditText)findViewById(R.id.editText);
         btnSend = (Button)findViewById(R.id.btnSend);
-        textRecebido = (TextView)findViewById(R.id.textRecebido);
+        messageReceivedTextView = (TextView)findViewById(R.id.textRecebido);
         textConnected = (TextView)findViewById(R.id.textConnected);
     }
 
@@ -49,10 +49,9 @@ public class BluetoothChat extends Activity implements Observer {
         editText.setText("");
         newLineTextView("Enviado:" + msg);
         communication.send(msg.getBytes());
-
     }
 
-    public void conectarAction(View view){
+    public void connectAction(View view){
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Conexão Bluetooth");
         builder.setMessage("Conectar-se como...");
@@ -75,7 +74,7 @@ public class BluetoothChat extends Activity implements Observer {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                textRecebido.setText(textRecebido.getText().toString()+text+"\n");
+                messageReceivedTextView.setText(messageReceivedTextView.getText().toString()+text+"\n");
             }
         });
     }
@@ -127,10 +126,6 @@ public class BluetoothChat extends Activity implements Observer {
 
         return super.onOptionsItemSelected(item);
     }
-
-    /*
-    Metodos para a implementacao da Interface Observer
-     */
 
     @Override
     public void update(byte[] data) {

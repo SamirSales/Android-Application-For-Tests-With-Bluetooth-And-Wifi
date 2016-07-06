@@ -1,24 +1,19 @@
 package com.example.samir.comunications;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,8 +22,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
-import com.example.samir.comunications.interfaces.BluetoothUser;
-import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
 import com.example.samir.devicescommunication.R;
 
