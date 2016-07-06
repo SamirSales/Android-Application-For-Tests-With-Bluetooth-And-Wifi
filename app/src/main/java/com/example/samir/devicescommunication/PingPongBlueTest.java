@@ -85,27 +85,27 @@ public class PingPongBlueTest extends Activity implements Observer {
         connectionStarted = false;
     }
 
-//    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
-//        @Override
-//        public void onReceive(final Context context, Intent intent) {
-//            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-//            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-//            Log.i(TAG, "level: " + level + "; scale: " + scale);
-//            int percent = (level*100)/scale;
-//
-//            if(batteryInitPercent==0){
-//                batteryInitPercent = percent;
-//            }
-//            batteryPercent = percent;
-//
-//            batteryChargingStr = String.valueOf(percent) + "%";
-//            handler.post( new Runnable() {
-//                public void run() {
-//                    Log.i("bateria","bateria: "+ batteryChargingStr);
-//                }
-//            });
-//        }
-//    };
+    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(final Context context, Intent intent) {
+            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
+            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+            Log.i(TAG, "level: " + level + "; scale: " + scale);
+            int percent = (level*100)/scale;
+
+            if(batteryInitPercent==0){
+                batteryInitPercent = percent;
+            }
+            batteryPercent = percent;
+
+            batteryChargingStr = String.valueOf(percent) + "%";
+            handler.post( new Runnable() {
+                public void run() {
+                    Log.i("bateria","bateria: "+ batteryChargingStr);
+                }
+            });
+        }
+    };
 
     public void connectAction(View view){
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -142,7 +142,7 @@ public class PingPongBlueTest extends Activity implements Observer {
         }catch (Exception ex){
             Log.e(TAG, ex.getMessage());
         }
-        updateInformations();
+        updateInfo();
     }
 
     int count_update = 0;
@@ -205,7 +205,7 @@ public class PingPongBlueTest extends Activity implements Observer {
         });
     }
 
-    public void updateInformations(){
+    public void updateInfo(){
         final String ip = Utils.getIPAddress(true);
         Calendar c = Calendar.getInstance();
         int hour = c.get(Calendar.HOUR);
@@ -249,7 +249,7 @@ public class PingPongBlueTest extends Activity implements Observer {
                     communication.send("0".getBytes());
                 }
                 while (communication != null && communication.isConnected()) {
-                    updateInformations();
+                    updateInfo();
 
                     try {
                         sleep(1000);
@@ -298,7 +298,7 @@ public class PingPongBlueTest extends Activity implements Observer {
                 try {
                     socket = mmServerSocket.accept();
                     thread_ativa = true;
-                    updateInformations();
+                    updateInfo();
 
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
