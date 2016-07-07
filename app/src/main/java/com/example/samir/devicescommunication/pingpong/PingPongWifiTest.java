@@ -1,7 +1,6 @@
 package com.example.samir.devicescommunication.pingpong;
 
 import android.annotation.TargetApi;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,10 +13,8 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
-import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
@@ -25,15 +22,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.samir.comunications.SettingsWifi;
 import com.example.samir.devicescommunication.ConnectServerWifi;
 import com.example.samir.devicescommunication.R;
-import com.example.samir.testOfComunication.Utils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,7 +36,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 /**
  * Created by Samir Sales on 27/02/15.
@@ -89,9 +82,9 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         setRegisterReceiverBatteryChanged();
         resetCounters();
         setStartTime();
+        setArrayMessageToSend(new ArrayList<String>());
 
         arrayMessageToRead = new ArrayList<>();
-        arrayMessageToSend = new ArrayList<>();
         socketServerThread = null;
 
         setViews();
@@ -110,7 +103,7 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
 
         mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         mChannel = mManager.initialize(this, getMainLooper(), null);
-        receiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
+        receiver = new WiFiDirectBroadcastReceiver(mManager, mChannel);
     }
 
     /** register the BroadcastReceiver with the intent values to be matched */
@@ -142,27 +135,6 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         listOfPeersWifiDialog();
     }
 
-    private void sendSayingTheNextNumber(String numberReceived){
-        try {
-            long number = Long.parseLong(numberReceived);
-            String msg = "0";
-
-            if(number < Long.MAX_VALUE){
-                setCounter(number+1);
-                msg = ""+getCounter();
-                updateTextView("Eu: "+msg);
-                arrayMessageToSend.add(msg);
-            }else{
-                incrementCounterOfCounter();
-                updateTextView("Eu: "+msg);
-                arrayMessageToSend.add(msg);
-            }
-        }catch (Exception ex){
-            Log.e(TAG, ex.getMessage());
-        }
-        updateInfo();
-    }
-
     public void clientActionBtn(View view){
         if(myClientTask != null && socketServerThread == null){
 
@@ -180,25 +152,10 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         socketServerThread.start();
     }
 
+    @Override
     public void updateInfo(){
         String endTime = getCurrentTime();
         setUserAndEndTime((myClientTask != null), endTime);
-    }
-
-    int lines = 0;
-
-    public void updateTextView(final String text){
-        if(lines >= 6){
-            lines = 1;
-        }else{
-            lines++;
-        }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setReceivedDataTextView(getReceivedDataText()+ text + "\n");
-            }
-        });
     }
 
     private void listOfPeersWifiDialog(){
@@ -262,7 +219,7 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                     }
                 };
 
-                //imprime o nome dos dispositivos
+                // print devices name...
                 for(int i=0; i<peers.size(); i++){
                     WifiP2pDevice wDev = peers.get(i);
                     Log.i(TAG,"peer: "+wDev.deviceName);
@@ -321,13 +278,11 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
 
         private WifiP2pManager.Channel mChannel;
         private WifiP2pManager mManager;
-        private Context context;
 
-        public WiFiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel, Context context){
+        public WiFiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel){
             super();
             this.mManager = mManager;
             this.mChannel = mChannel;
-            this.context = context;
         }
 
         @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
@@ -458,30 +413,16 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         public void run() {
             OutputStream outputStream;
             InputStream inputStream;
-            String msgReply = "Hello from Android, you are #" + cnt;
 
             try {
                 outputStream = hostThreadSocket.getOutputStream();
                 inputStream = hostThreadSocket.getInputStream();
                 PrintStream printStream = new PrintStream(outputStream);
-                //printStream.print(msgReply);
-                //printStream.close();
-                //updateStatusOfConnection();
                 updateInfo();
-
-//                message += "replayed: " + msgReply + "\n";
-//
-//                PingPongWifiTest.this.runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        receivedDataTextView.setText(message);
-//                    }
-//                });
 
                 final PrintStream printStream2 = printStream;
                 final InputStream inputStream2 = inputStream;
 
-                //NEWS HERE... TODO
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -495,7 +436,6 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                                 }
                                 arrayMessageToSend = new ArrayList<String>();
                             }
-
                         }
                     }
                 }).start();
@@ -522,11 +462,8 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                                     e.printStackTrace();
                                 }
 
-
                                 if(arrayMessageToRead.size()>0){
                                     for(String str2 : arrayMessageToRead){
-                                        //Log.i(TAG, "arrayMessage.get(i)="+str2);
-                                        //printStream2.print(str2);
                                         updateTextView("Outro usuario: " + str2);
                                         sendSayingTheNextNumber(str2);
 
@@ -546,7 +483,6 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                 e.printStackTrace();
                 message += "Something wrong! " + e.toString() + "\n";
             }
-
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -566,11 +502,7 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         String ip;
         int porta;
 
-        String response = "";
-
-        //alteracoes...
         boolean myClientIsRunning;
-        ByteArrayOutputStream byteArrayOutputStream;
         PrintStream printStream;
 
         MyClientTask(String ip, int porta) throws IOException {
@@ -612,7 +544,6 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
             mmOutStream = tmpOut;
 
             if(socketServerThread == null){
-                //connectionNotification("client porta:"+HOST);
                 updateInfo();
             }
 

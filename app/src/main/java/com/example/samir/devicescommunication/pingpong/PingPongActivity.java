@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.example.samir.devicescommunication.R;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 
 /**
@@ -32,6 +33,8 @@ public abstract class PingPongActivity extends Activity{
     private int batteryPercent;
     private String batteryChargingStr;
     private Handler handler = new Handler();
+
+    private ArrayList<String> arrayMessageToSend;
 
     private Button serverBtn;
     private Button clientBtn;
@@ -131,14 +134,67 @@ public abstract class PingPongActivity extends Activity{
             @Override
             public void run() {
                 textStatus.setText(str);
-                clientBtn.setVisibility(View.INVISIBLE);
-                searchBtn.setVisibility(View.INVISIBLE);
-                serverBtn.setVisibility(View.INVISIBLE);
-                clientBtn.setEnabled(false);
-                searchBtn.setEnabled(false);
-                serverBtn.setEnabled(false);
+                if (clientBtn != null) {
+                    clientBtn.setVisibility(View.INVISIBLE);
+                    clientBtn.setEnabled(false);
+                }
+                if (searchBtn != null) {
+                    searchBtn.setVisibility(View.INVISIBLE);
+                    searchBtn.setEnabled(false);
+                }
+                if (serverBtn != null) {
+                    serverBtn.setVisibility(View.INVISIBLE);
+                    serverBtn.setEnabled(false);
+                }
             }
         });
+    }
+
+    protected void sendSayingTheNextNumber(String numberReceived){
+        try {
+            long number = Long.parseLong(numberReceived);
+            String msg = "0";
+
+            if(number < Long.MAX_VALUE){
+                setCounter(number+1);
+                msg = ""+getCounter();
+                updateTextView("Eu: " + msg);
+                arrayMessageToSend.add(msg);
+            }else{
+                incrementCounterOfCounter();
+                updateTextView("Eu: "+ msg);
+                arrayMessageToSend.add(msg);
+            }
+        }catch (Exception ex){
+            Log.e(TAG, ex.getMessage());
+        }
+        updateInfo();
+    }
+
+    private int lines = 0;
+
+    public void updateTextView(final String text){
+        if(lines >= 6){
+            lines = 1;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setReceivedDataTextView("");
+                }
+            });
+        }else{
+            lines++;
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setReceivedDataTextView(getReceivedDataText() + text + "\n");
+            }
+        });
+    }
+
+    protected void updateInfo(){
+
     }
 
     protected void incrementCounterOfCounter(){
@@ -159,5 +215,9 @@ public abstract class PingPongActivity extends Activity{
 
     public String getReceivedDataText(){
         return receivedDataTextView.getText().toString();
+    }
+
+    public void setArrayMessageToSend(ArrayList<String> arrayMessageToSend) {
+        this.arrayMessageToSend = arrayMessageToSend;
     }
 }

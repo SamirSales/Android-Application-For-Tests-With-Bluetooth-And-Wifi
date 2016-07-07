@@ -1,37 +1,26 @@
 package com.example.samir.devicescommunication.pingpong;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Color;
-import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 
+import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
-import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.interfaces.Observer;
 import com.example.samir.devicescommunication.ConnectThreadBluePingTest;
 import com.example.samir.devicescommunication.R;
-import com.example.samir.testOfComunication.Utils;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.UUID;
 
 /**
@@ -43,7 +32,6 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
 
     private static ConnectThreadBluePingTest connectedThreadServer;
     private static boolean connectionStarted;
-    private boolean working_as_server;
     private Communication communication = null;
 
     private AcceptThread acceptThread;
@@ -57,6 +45,7 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         setRegisterReceiverBatteryChanged();
         resetCounters();
         setViews();
+        setArrayMessageToSend(new ArrayList<String>());
 
         connectedThreadServer = null;
         connectionStarted = false;
@@ -68,13 +57,11 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         builder.setMessage("Conectar-se como...");
         builder.setPositiveButton("cliente", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                working_as_server = false;
                 initConnection();
             }
         });
         builder.setNegativeButton("servidor", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                working_as_server = true;
                 acceptThread = new AcceptThread();
                 acceptThread.start();
             }
@@ -82,32 +69,14 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         builder.show();
     }
 
-    private void sendSayingTheNextNumber(String numberReceived){
-        try {
-            long number = Long.parseLong(numberReceived);
-            String msg = "0";
-
-            if(number < Long.MAX_VALUE){
-                setCounter(number+1);
-                msg = ""+getCounter();
-            }else{
-                incrementCounterOfCounter();
-            }
-            updateReceivedText("Eu: " + msg);
-        }catch (Exception ex){
-            Log.e(TAG, ex.getMessage());
-        }
-        updateInfo();
-    }
-
     int count_update = 0;
+    
     private void updateReceivedText(final String text){
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if(count_update >= 6){
                     count_update = 0;
-                    setReceivedDataTextView("");
                 }
                 count_update++;
                 setReceivedDataTextView(getReceivedDataText()+text+"\n");
@@ -151,6 +120,7 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
     public void updateInfo(){
         String endTime = getCurrentTime();
         setUserAndEndTime((connectedThreadServer == null), endTime);
@@ -194,12 +164,9 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
     private class AcceptThread extends Thread {
         private final BluetoothServerSocket mmServerSocket;
 
-        private boolean thread_ativa;
-
         public AcceptThread() {
             // Use a temporary object that is later assigned to mmServerSocket,
             // because mmServerSocket is final
-            thread_ativa = false;
             BluetoothServerSocket tmp = null;
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             try {
@@ -215,7 +182,6 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
             while (true) {
                 try {
                     socket = mmServerSocket.accept();
-                    thread_ativa = true;
                     updateInfo();
 
                 } catch (IOException e) {
