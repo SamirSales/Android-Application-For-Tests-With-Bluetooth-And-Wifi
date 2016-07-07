@@ -9,9 +9,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.example.samir.devicescommunication.BluetoothChat;
-import com.example.samir.devicescommunication.P2PWifiCommunication;
-import com.example.samir.devicescommunication.PingPongBlueTest;
-import com.example.samir.devicescommunication.PingPongWifiTest;
+import com.example.samir.devicescommunication.P2PWifiChat;
+import com.example.samir.devicescommunication.pingpong.PingPongBlueTest;
+import com.example.samir.devicescommunication.pingpong.PingPongWifiTest;
 import com.example.samir.devicescommunication.R;
 import com.example.samir.devicescommunication.TestImagens;
 
@@ -57,7 +57,7 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 break;
             case 2:
                 //Testes P2P Wifi
-                Intent intent2 = new Intent(this, P2PWifiCommunication.class);
+                Intent intent2 = new Intent(this, P2PWifiChat.class);
                 startActivity(intent2);
                 break;
             case 3:

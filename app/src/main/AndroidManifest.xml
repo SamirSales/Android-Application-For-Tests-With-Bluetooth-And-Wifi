@@ -35,17 +35,17 @@
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name=".P2PWifiCommunication">
+        <activity android:name=".P2PWifiChat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name=".PingPongWifiTest">
+        <activity android:name=".pingpong.PingPongWifiTest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.example.samir.devicescommunication.PingPongBlueTest">
+        <activity android:name=".pingpong.PingPongBlueTest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>

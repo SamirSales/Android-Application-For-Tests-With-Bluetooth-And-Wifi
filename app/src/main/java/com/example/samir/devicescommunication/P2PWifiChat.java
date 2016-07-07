@@ -43,9 +43,9 @@ import java.util.ArrayList;
  * Created by Samir Sales on 19/02/15.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class P2PWifiCommunication extends Activity implements WifiP2pManager.ConnectionInfoListener{
+public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionInfoListener{
 
-    private static final String TAG = "P2PWifiCommunication";
+    private static final String TAG = "P2PWifiChat";
 
     private EditText editText;
     private TextView receivedDataTextView;
@@ -257,7 +257,7 @@ public class P2PWifiCommunication extends Activity implements WifiP2pManager.Con
 
             @Override
             public void onFailure(int reasonCode) {
-                Toast.makeText(P2PWifiCommunication.this, "Falha na procura de dispositivos!", Toast.LENGTH_LONG).show();
+                Toast.makeText(P2PWifiChat.this, "Falha na procura de dispositivos!", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -277,7 +277,7 @@ public class P2PWifiCommunication extends Activity implements WifiP2pManager.Con
 
             @Override
             public void onFailure(int reason) {
-                Toast.makeText(P2PWifiCommunication.this, "Connect failed. Retry.",
+                Toast.makeText(P2PWifiChat.this, "Connect failed. Retry.",
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -364,7 +364,7 @@ public class P2PWifiCommunication extends Activity implements WifiP2pManager.Con
         public void run() {
             try {
                 serverSocket = new ServerSocket(SettingsWifi.HOST);
-                P2PWifiCommunication.this.runOnUiThread(new Runnable() {
+                P2PWifiChat.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         receivedDataTextView.setText("I'm waiting here: " + serverSocket.getLocalPort());
@@ -386,7 +386,7 @@ public class P2PWifiCommunication extends Activity implements WifiP2pManager.Con
                         count++;
                         message += "#"+count+" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
 
-                        P2PWifiCommunication.this.runOnUiThread(new Runnable() {
+                        P2PWifiChat.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 receivedDataTextView.setText(message);
@@ -455,7 +455,7 @@ public class P2PWifiCommunication extends Activity implements WifiP2pManager.Con
 
                 message += "replayed: " + msgReply + "\n";
 
-                P2PWifiCommunication.this.runOnUiThread(new Runnable() {
+                P2PWifiChat.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         receivedDataTextView.setText(message);

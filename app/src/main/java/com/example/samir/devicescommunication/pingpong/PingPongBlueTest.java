@@ -1,4 +1,4 @@
-package com.example.samir.devicescommunication;
+package com.example.samir.devicescommunication.pingpong;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.BatteryManager;
 import android.os.Bundle;
@@ -23,6 +24,8 @@ import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.interfaces.Observer;
+import com.example.samir.devicescommunication.ConnectThreadBluePingTest;
+import com.example.samir.devicescommunication.R;
 import com.example.samir.testOfComunication.Utils;
 
 import java.io.IOException;
@@ -34,17 +37,9 @@ import java.util.UUID;
 /**
  * Created by Samir Sales on 02/03/15.
  */
-public class PingPongBlueTest extends Activity implements Observer {
+public class PingPongBlueTest extends PingPongActivity implements Observer {
 
     private String TAG = "PingPongBlueTest";
-
-    private final int DELAY_TO_SEND = 300;
-
-    private long counter;
-    private long counterOfCounter;
-
-    private TextView textStatus;
-    private TextView textRecebido;
 
     private static ConnectThreadBluePingTest connectedThreadServer;
     private static boolean connectionStarted;
@@ -53,59 +48,19 @@ public class PingPongBlueTest extends Activity implements Observer {
 
     private AcceptThread acceptThread;
 
-    private String startTime;
-
-    private int batteryInitPercent;
-    private int batteryPercent;
-
-    private Handler handler = new Handler();
-    String batteryChargingStr;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ping_pong_bleutooth);
 
-        Calendar c = Calendar.getInstance();
-        int hour = c.get(Calendar.HOUR);
-        int minutes = c.get(Calendar.MINUTE);
-        int seconds = c.get(Calendar.SECOND);
-        startTime = hour+":"+minutes+":"+seconds;
-
-        //bateria
-        //this.registerReceiver(this.mBatInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
-        counter = 0;
-        counterOfCounter = 0;
-
-        textStatus = (TextView)findViewById(R.id.textStatus);
-        textRecebido = (TextView)findViewById(R.id.textRecebido);
+        setStartTime();
+        setRegisterReceiverBatteryChanged();
+        resetCounters();
+        setViews();
 
         connectedThreadServer = null;
         connectionStarted = false;
     }
-
-    private BroadcastReceiver mBatInfoReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(final Context context, Intent intent) {
-            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
-            Log.i(TAG, "level: " + level + "; scale: " + scale);
-            int percent = (level*100)/scale;
-
-            if(batteryInitPercent==0){
-                batteryInitPercent = percent;
-            }
-            batteryPercent = percent;
-
-            batteryChargingStr = String.valueOf(percent) + "%";
-            handler.post( new Runnable() {
-                public void run() {
-                    Log.i("bateria","bateria: "+ batteryChargingStr);
-                }
-            });
-        }
-    };
 
     public void connectAction(View view){
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -133,10 +88,10 @@ public class PingPongBlueTest extends Activity implements Observer {
             String msg = "0";
 
             if(number < Long.MAX_VALUE){
-                counter = number+1;
-                msg = ""+counter;
+                setCounter(number+1);
+                msg = ""+getCounter();
             }else{
-                counterOfCounter++;
+                incrementCounterOfCounter();
             }
             updateReceivedText("Eu: " + msg);
         }catch (Exception ex){
@@ -150,12 +105,12 @@ public class PingPongBlueTest extends Activity implements Observer {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if(count_update>=6){
+                if(count_update >= 6){
                     count_update = 0;
-                    textRecebido.setText("");
+                    setReceivedDataTextView("");
                 }
                 count_update++;
-                textRecebido.setText(textRecebido.getText().toString()+text+"\n");
+                setReceivedDataTextView(getReceivedDataText()+text+"\n");
             }
         });
 
@@ -196,40 +151,9 @@ public class PingPongBlueTest extends Activity implements Observer {
         return super.onOptionsItemSelected(item);
     }
 
-    private void textNotifyConnection(final String str){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textStatus.setText(str);
-            }
-        });
-    }
-
     public void updateInfo(){
-        final String ip = Utils.getIPAddress(true);
-        Calendar c = Calendar.getInstance();
-        int hour = c.get(Calendar.HOUR);
-        int minutes = c.get(Calendar.MINUTE);
-        int seconds = c.get(Calendar.SECOND);
-        String endTime = hour+":"+minutes+":"+seconds;
-
-        if(connectedThreadServer == null){
-            String str = getStringInfoFormated("CLIENT", endTime);
-            textNotifyConnection(str);
-        }else{
-            String str = getStringInfoFormated("SERVER", endTime);
-            textNotifyConnection(str);
-        }
-    }
-
-    private String getStringInfoFormated(String user, String endTime){
-        return  "I'm "+user+" \n" +
-                "horario  inicial: "+ startTime +"\n"+
-                "horario    final: "+endTime+"\n"+
-                "loop(s) number = "+counterOfCounter+"\n" +
-                "last count = "+counter+"\n"+
-                "bateria inicial = "+batteryInitPercent+"%\n"+
-                "bateria agora   = "+batteryPercent+"%";
+        String endTime = getCurrentTime();
+        setUserAndEndTime((connectedThreadServer == null), endTime);
     }
 
     @Override
@@ -237,7 +161,7 @@ public class PingPongBlueTest extends Activity implements Observer {
         String str =  new String(data);
         updateReceivedText("Recebido:" + str);
         sendSayingTheNextNumber(str);
-        String str2 = counter+"";
+        String str2 = getCounter()+"";
         communication.send(str2.getBytes(Charset.forName("UTF-8")));
     }
 
@@ -257,13 +181,7 @@ public class PingPongBlueTest extends Activity implements Observer {
                         e.printStackTrace();
                     }
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        textStatus.setText("desconectado");
-                        textStatus.setTextColor(Color.GRAY);
-                    }
-                });
+                setTextStatusDisconnected();
             }
         }.start();
     }
@@ -329,7 +247,7 @@ public class PingPongBlueTest extends Activity implements Observer {
                             updateReceivedText("Recebido:" + str);
                             sendSayingTheNextNumber(str);
                             arrayMessage.remove(i);
-                            String str2 = counter+"";
+                            String str2 = getCounter()+"";
                             connectedThreadServer.write(str2.getBytes(Charset.forName("UTF-8")));
                             if(i>-1){ i--; }
                         }
