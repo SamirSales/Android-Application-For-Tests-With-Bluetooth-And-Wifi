@@ -35,12 +35,12 @@
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.example.samir.devicescommunication.ComunicacaoWifiP2P">
+        <activity android:name=".P2PWifiCommunication">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.example.samir.devicescommunication.PingPongTest">
+        <activity android:name=".PingPongWifiTest">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
