@@ -15,11 +15,12 @@ import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
-import com.example.samir.devicescommunication.ConnectThreadBluePingTest;
 import com.example.samir.devicescommunication.R;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -36,6 +37,8 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
 
     private AcceptThread acceptThread;
 
+    private ArrayList<String> arrayMessageToRead;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +50,8 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         resetCounters();
         setViews();
         setArrayMessageToSend(new ArrayList<String>());
+
+        arrayMessageToRead = new ArrayList<>();
 
         connectedThreadServer = null;
         connectionStarted = false;
@@ -84,12 +89,11 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
                 setReceivedDataTextView(getReceivedDataText()+text+"\n");
             }
         });
-
     }
 
     public void initConnection() {
         if(!connectionStarted){
-            initCommunication(EnumConnection.BLUETOOTH_PING_TEST);
+            initCommunication(EnumConnection.BLUETOOTH_CLIENT);
             connectionStarted = true;
         }
     }
@@ -118,7 +122,6 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -130,11 +133,12 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
 
     @Override
     public void update(byte[] data) {
+        // bluetooth client reading...
         String str =  new String(data);
         updateReceivedText("Recebido:" + str);
         sendSayingTheNextNumber(str);
         String str2 = getCounter()+"";
-        communication.send(str2.getBytes(Charset.forName("UTF-8")));
+        communication.send(str2.getBytes());
     }
 
     @Override
@@ -179,15 +183,14 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         }
 
         public void run() {
-            BluetoothSocket socket = null;
+            BluetoothSocket socket;
             // Keep listening until exception occurs or a socket is returned
             while (true) {
                 try {
                     socket = mmServerSocket.accept();
                     updateInfo();
-
                 } catch (IOException e) {
-                    Log.e(TAG, e.getMessage());
+                    e.printStackTrace();
                     break;
                 }
                 // If a connection was accepted
@@ -195,39 +198,12 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
                     manageConnectedSocket(socket);
                 }
             }
-            Log.i(TAG,"thread terminada!");
         }
 
         private void manageConnectedSocket(BluetoothSocket socket) {
             final ArrayList<String> arrayMessage = new ArrayList<String>();
             connectedThreadServer =  new ConnectThreadBluePingTest(socket, arrayMessage);
             connectedThreadServer.start();
-
-            // Reading...
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while(true){
-
-                        for(int i=0; i<arrayMessage.size();i++){
-                            final String str = arrayMessage.get(i);
-
-                            updateReceivedText("Recebido:" + str);
-                            sendSayingTheNextNumber(str);
-                            arrayMessage.remove(i);
-                            String str2 = getCounter()+"";
-                            connectedThreadServer.write(str2.getBytes(Charset.forName("UTF-8")));
-                            if(i>-1){ i--; }
-                        }
-
-                        try {
-                            Thread.sleep(DELAY_TO_SEND);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }).start();
         }
 
         /** Will cancel the listening socket, and cause the thread to finish */
@@ -245,6 +221,94 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         super.onStop();
         if(acceptThread != null){
             acceptThread.cancel();
+        }
+    }
+
+    public class ConnectThreadBluePingTest extends Thread {
+        private final InputStream mmInStream;
+        private final OutputStream mmOutStream;
+
+        private PrintStream printStream;
+
+        public ConnectThreadBluePingTest(BluetoothSocket socket, ArrayList<String> arrayMessage) {
+            InputStream tmpIn = null;
+            OutputStream tmpOut = null;
+
+            // Get the input and output streams, using temp objects because
+            // member streams are final
+            try {
+                tmpIn = socket.getInputStream();
+                tmpOut = socket.getOutputStream();
+            } catch (IOException e) { }
+
+            mmInStream = tmpIn;
+            mmOutStream = tmpOut;
+
+            printStream = new PrintStream(mmOutStream);
+        }
+
+        public void run() {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    readMessages(mmInStream);
+                }
+            }).start();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true){
+                        printMessages(printStream);
+                    }
+                }
+            }).start();
+        }
+
+        /* Call this from the main activity to send data to the remote device */
+        public void write(byte[] bytes) {
+            try {
+                mmOutStream.write(bytes);
+            } catch (IOException e) { }
+        }
+    }
+
+    private void printMessages(PrintStream printStream){
+        if(getArrayMessageToSend().size()>0){
+            for(String str : getArrayMessageToSend()){
+                printStream.print(str);
+            }
+            setArrayMessageToSend(new ArrayList<String>());
+        }
+    }
+
+    private void readMessages(InputStream inputStream){
+        byte[] buffer = new byte[1024];  // buffer store for the stream
+
+        while (true){
+            try {
+                // Read from the InputStream
+                inputStream.read(buffer);
+                // Send the obtained bytes to the UI activity
+                String str = new String (buffer);
+                str = str.trim();
+                arrayMessageToRead.add(str);
+
+                try {
+                    Thread.sleep(DELAY_TO_SEND);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(arrayMessageToRead.size()>0){
+                    for(String str2 : arrayMessageToRead){
+                        updateTextView("Recebido: "+str2);
+                        sendSayingTheNextNumber(str2);
+                    }
+                    arrayMessageToRead = new ArrayList<>();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

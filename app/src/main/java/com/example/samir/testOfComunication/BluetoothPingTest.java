@@ -76,19 +76,7 @@ public class BluetoothPingTest implements Communication {
      */
     @Override
     public void open() {
-
-//        AppConfigDB db = new AppConfigDB(context);
-//        db.open();
-//        AppConfig config = db.getConfig();
-//        db.close();
-
-//        if (config.getConexao() == EnumConnection.NULL) {
         showBluetoothDialog();
-//        } else {
-//            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-//            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(config.getUuid());
-//            new ConnectionTask(device).execute();
-//        }
     }
 
     /**

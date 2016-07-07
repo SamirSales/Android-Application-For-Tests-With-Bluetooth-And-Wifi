@@ -1,7 +1,6 @@
 package com.example.samir.devicescommunication;
 
 import android.bluetooth.BluetoothSocket;
-import android.os.Handler;
 import android.util.Log;
 
 import java.io.IOException;
@@ -13,14 +12,11 @@ import java.util.ArrayList;
  * Created by Samir Sales on 03/03/15.
  */
 public class ConnectThreadBluePingTest extends Thread {
-    private final BluetoothSocket mmSocket;
     private final InputStream mmInStream;
     private final OutputStream mmOutStream;
-    private Handler mHandler;
     private ArrayList<String> arrayMessage;
 
     public ConnectThreadBluePingTest(BluetoothSocket socket, ArrayList<String> arrayMessage) {
-        mmSocket = socket;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
         this.arrayMessage = arrayMessage;
@@ -38,13 +34,12 @@ public class ConnectThreadBluePingTest extends Thread {
 
     public void run() {
         byte[] buffer = new byte[1024];  // buffer store for the stream
-        int bytes; // bytes returned from read()
 
         // Keep listening to the InputStream until an exception occurs
         while (true) {
             try {
                 // Read from the InputStream
-                bytes = mmInStream.read(buffer);
+                mmInStream.read(buffer);
                 String str = new String (buffer);
                 Log.i("bluetooth","server recebe: "+str);
                 arrayMessage.add(str);
@@ -58,13 +53,6 @@ public class ConnectThreadBluePingTest extends Thread {
     public void write(byte[] bytes) {
         try {
             mmOutStream.write(bytes);
-        } catch (IOException e) { }
-    }
-
-    /* Call this from the main activity to shutdown the connection */
-    public void cancel() {
-        try {
-            mmSocket.close();
         } catch (IOException e) { }
     }
 }

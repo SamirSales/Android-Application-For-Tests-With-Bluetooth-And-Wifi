@@ -172,17 +172,16 @@ public abstract class PingPongActivity extends Activity{
             String msg = "0";
 
             if(number < Long.MAX_VALUE){
-                setCounter(number+1);
+                setCounter(number + 1);
                 msg = ""+getCounter();
-                updateTextView("Eu: " + msg);
-                arrayMessageToSend.add(msg);
             }else{
                 incrementCounterOfCounter();
-                updateTextView("Eu: "+ msg);
-                arrayMessageToSend.add(msg);
+                setCounter(0);
             }
+            updateTextView("Eu: "+ msg);
+            arrayMessageToSend.add(msg);
         }catch (Exception ex){
-            Log.e(TAG, ex.getMessage());
+            ex.printStackTrace();
         }
         updateInfo();
     }
