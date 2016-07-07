@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.BatteryManager;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -41,6 +42,8 @@ public abstract class PingPongActivity extends Activity{
     private Button searchBtn;
     private TextView textStatus;
     private TextView receivedDataTextView;
+
+    private PowerManager.WakeLock mWakeLock;
 
     protected void setViews(){
         receivedDataTextView = (TextView)findViewById(R.id.textRecebido);
@@ -96,6 +99,19 @@ public abstract class PingPongActivity extends Activity{
     protected void resetCounters(){
         counter = 0;
         counterOfCounter = 0;
+    }
+
+    protected void keepScreenOn(){
+        // Keep screen on
+        final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+        this.mWakeLock.acquire();
+    }
+
+    @Override
+    public void onDestroy() {
+        this.mWakeLock.release();
+        super.onDestroy();
     }
 
     protected String getStringInfoFormatted(String user, String endTime){
@@ -219,5 +235,9 @@ public abstract class PingPongActivity extends Activity{
 
     public void setArrayMessageToSend(ArrayList<String> arrayMessageToSend) {
         this.arrayMessageToSend = arrayMessageToSend;
+    }
+
+    public ArrayList<String> getArrayMessageToSend(){
+        return arrayMessageToSend;
     }
 }

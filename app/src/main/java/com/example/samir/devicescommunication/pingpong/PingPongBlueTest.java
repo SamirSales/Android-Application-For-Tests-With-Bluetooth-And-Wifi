@@ -41,6 +41,7 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ping_pong_bleutooth);
 
+        keepScreenOn();
         setStartTime();
         setRegisterReceiverBatteryChanged();
         resetCounters();
@@ -70,13 +71,14 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
     }
 
     int count_update = 0;
-    
+
     private void updateReceivedText(final String text){
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 if(count_update >= 6){
                     count_update = 0;
+                    setReceivedDataTextView("");
                 }
                 count_update++;
                 setReceivedDataTextView(getReceivedDataText()+text+"\n");

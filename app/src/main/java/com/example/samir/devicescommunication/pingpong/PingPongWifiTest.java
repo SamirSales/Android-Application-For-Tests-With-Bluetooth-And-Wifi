@@ -15,7 +15,6 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.PowerManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -25,7 +24,6 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.example.samir.comunications.SettingsWifi;
-import com.example.samir.devicescommunication.ConnectServerWifi;
 import com.example.samir.devicescommunication.R;
 
 import java.io.IOException;
@@ -49,11 +47,8 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
     private WifiP2pManager.Channel mChannel;
     private WifiP2pManager mManager;
 
-    private boolean wifiP2pEnabled;
-
     private MyClientTask myClientTask;
     private ArrayList<String> arrayMessageToRead;
-    private ArrayList<String> arrayMessageToSend;
 
     private SocketServerThread socketServerThread;
 
@@ -62,9 +57,6 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
     private ArrayList<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
 
     private WifiP2pManager.PeerListListener peerListListener;
-    private ConnectServerWifi connectServerWifi;
-
-    protected PowerManager.WakeLock mWakeLock;
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
@@ -73,12 +65,7 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         setContentView(R.layout.activity_ping_pong_test);
 
         resetBatteryStatusCounters();
-
-        // Keep screen on
-        final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
-        this.mWakeLock.acquire();
-
+        keepScreenOn();
         setRegisterReceiverBatteryChanged();
         resetCounters();
         setStartTime();
@@ -119,26 +106,12 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         unregisterReceiver(receiver);
     }
 
-    @Override
-    public void onStop(){
-        super.onStop();
-    }
-
-    @Override
-    public void onDestroy() {
-        this.mWakeLock.release();
-        super.onDestroy();
-    }
-
     public void searchDevicesBtn(View view){
         fetchListOfPeers();
         listOfPeersWifiDialog();
     }
 
     public void clientActionBtn(View view){
-        if(myClientTask != null && socketServerThread == null){
-
-        }
         try {
             myClientTask = new MyClientTask(SettingsWifi.IP_SERVER,SettingsWifi.HOST);
             myClientTask.execute();
@@ -186,7 +159,7 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
             pairedDevicesLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    //conectar...
+                    // connect...
                     connectToAPeer(peers.get(position));
                     dialog.dismiss();
                 }
@@ -293,10 +266,8 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
 
                 int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
                 if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-                    wifiP2pEnabled = true;
                     Log.i(TAG, "wifiP2pEnabled = true;");
                 } else {
-                    wifiP2pEnabled = false;
                     Log.i(TAG, "wifiP2pEnabled = false;");
                 }
 
@@ -319,15 +290,14 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         }
     }
 
-
-    String message = "";
-    ServerSocket serverSocket;
+    private String message = "";
+    private ServerSocket serverSocket;
 
     private class SocketServerThread extends Thread {
         int count = 0;
         OutputStream outputStream = null;
         InputStream inputStream = null;
-        boolean serverRunnig = false;
+        boolean serverRunning = false;
 
         @Override
         public void run() {
@@ -337,18 +307,15 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                     @Override
                     public void run() {
                         setReceivedDataTextView("I'm waiting here: " + serverSocket.getLocalPort());
-                        //updateStatusOfConnection();
                         updateInfo();
                     }
                 });
 
-                if(!serverRunnig){
-                    serverRunnig = true;
+                if(!serverRunning){
+                    serverRunning = true;
 
-                    /*
-                    Essa eh pra ser a parte onde o servidor fica esperando conexoes
-                     */
-                    while (serverRunnig) {
+                    // Server waiting for connections...
+                    while (serverRunning) {
                         Socket socket = serverSocket.accept();
                         outputStream = socket.getOutputStream();
                         inputStream = socket.getInputStream();
@@ -366,7 +333,6 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                         SocketServerReplyThread socketServerReplyThread =
                                 new SocketServerReplyThread(socket, count);
                         socketServerReplyThread.run();
-
                     }
                 }
 
@@ -374,7 +340,6 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         }
 
         public void write(byte[] bytes){
-
             if(outputStream != null){
                 try {
                     outputStream.write(bytes);
@@ -383,30 +348,59 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                 }
             }
         }
-
     }
 
-    private class SocketServerReplyThread extends Thread {
-
-        private Socket hostThreadSocket;
-        int cnt;
-
-        SocketServerReplyThread(Socket socket, int c) {
-            hostThreadSocket = socket;
-            cnt = c;
+    private void printMessages(PrintStream printStream){
+        if(getArrayMessageToSend().size()>0){
+            for(String str : getArrayMessageToSend()){
+                printStream.print(str);
+            }
+            setArrayMessageToSend(new ArrayList<String>());
         }
+    }
 
-        public void myPrint(String msg){
-            OutputStream outputStream;
+    private void readMessages(InputStream inputStream){
+        byte[] buffer = new byte[1024];  // buffer store for the stream
+
+        while (true){
             try {
-                outputStream = hostThreadSocket.getOutputStream();
-                PrintStream printStream = new PrintStream(outputStream);
-                printStream.print(msg);
-                printStream.close();
+                // Read from the InputStream
+                inputStream.read(buffer);
+                // Send the obtained bytes to the UI activity
+                String str = new String (buffer);
+                str = str.trim();
+                buffer = new byte[1024];
+                arrayMessageToRead.add(str);
+
+                try {
+                    Thread.sleep(DELAY_TO_SEND);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(arrayMessageToRead.size()>0){
+                    for(String str2 : arrayMessageToRead){
+                        updateTextView("Outro usuario: "+str2);
+                        sendSayingTheNextNumber(str2);
+                    }
+                    arrayMessageToRead = new ArrayList<>();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
 
+    /**
+     * This class is used to make the server mode connection.
+     */
+    private class SocketServerReplyThread extends Thread {
+
+        private Socket hostThreadSocket;
+        int counter;
+
+        SocketServerReplyThread(Socket socket, int counter) {
+            hostThreadSocket = socket;
+            this.counter = counter;
         }
 
         @Override
@@ -423,65 +417,10 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                 final PrintStream printStream2 = printStream;
                 final InputStream inputStream2 = inputStream;
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (true){
-
-                            if(arrayMessageToSend.size()>0){
-                                for(String str : arrayMessageToSend){
-                                    Log.i(TAG, "arrayMessage.get(i)="+str);
-                                    printStream2.print(str);
-                                    //updateTextView("Eu: "+str);
-                                }
-                                arrayMessageToSend = new ArrayList<String>();
-                            }
-                        }
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        byte[] buffer = new byte[1024];  // buffer store for the stream
-                        int bytes; // bytes returned from read()
-                        //se tiver algo no read(), imprime
-                        while (true){
-                            try {
-                                // Read from the InputStream
-                                bytes = inputStream2.read(buffer);
-                                // Send the obtained bytes to the UI activity
-                                String str = new String (buffer);
-                                str = str.trim();
-                                buffer = new byte[1024];
-                                arrayMessageToRead.add(str);
-
-                                try {
-                                    Thread.sleep(DELAY_TO_SEND);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-
-                                if(arrayMessageToRead.size()>0){
-                                    for(String str2 : arrayMessageToRead){
-                                        updateTextView("Outro usuario: " + str2);
-                                        sendSayingTheNextNumber(str2);
-
-                                    }
-                                    arrayMessageToRead = new ArrayList<String>();
-                                }
-
-                            } catch (IOException e) {
-                                Log.e(TAG, e.getMessage());
-                            }
-                        }
-                    }
-                }).start();
-
-
+                threadWriteMessages(printStream2);
+                threadReadMessages(inputStream2);
             } catch (IOException e) {
                 e.printStackTrace();
-                message += "Something wrong! " + e.toString() + "\n";
             }
             runOnUiThread(new Runnable() {
                 @Override
@@ -490,9 +429,11 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
                 }
             });
         }
-
     }
 
+    /**
+     * This class is used to make the client mode connection.
+     */
     public class MyClientTask extends AsyncTask {
 
         Socket socket;
@@ -500,14 +441,14 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
         OutputStream mmOutStream;
 
         String ip;
-        int porta;
+        int host;
 
         boolean myClientIsRunning;
         PrintStream printStream;
 
-        MyClientTask(String ip, int porta) throws IOException {
+        MyClientTask(String ip, int host) throws IOException {
             this.ip = ip;
-            this.porta = porta;
+            this.host = host;
             myClientIsRunning = false;
         }
 
@@ -531,13 +472,13 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
             OutputStream tmpOut = null;
 
             try {
-                socket = new Socket(ip,porta);
+                socket = new Socket(ip, host);
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
             } catch (UnknownHostException e) {
-                Log.e(TAG,e.getMessage());
+                e.printStackTrace();
             } catch(IOException e) {
-                Log.e(TAG,e.getMessage());
+                e.printStackTrace();
             }
 
             mmInStream = tmpIn;
@@ -546,69 +487,34 @@ public class PingPongWifiTest extends PingPongActivity implements WifiP2pManager
             if(socketServerThread == null){
                 updateInfo();
             }
-
             printStream = new PrintStream(mmOutStream);
             printStream.print("0");
 
-            //ESCRITA
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (true){
-
-                        if(arrayMessageToSend.size()>0){
-                            for(String str : arrayMessageToSend){
-                                //updateTextView("Eu: "+str);
-                                Log.i(TAG, "cliente envia = " + str);
-                                printStream.print(str);
-                            }
-                            arrayMessageToSend = new ArrayList<String>();
-                        }
-                    }
-                }
-            }).start();
-
-            //LEITURA
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    byte[] buffer = new byte[1024];  // buffer store for the stream
-                    int bytes; // bytes returned from read()
-
-                    while (true) {
-                        try {
-                            // Read from the InputStream
-                            bytes = mmInStream.read(buffer);
-                            Log.i(TAG,"bytes = "+bytes);
-                            // Send the obtained bytes to the UI activity
-                            String str = new String (buffer);
-                            str = str.trim();
-                            buffer = new byte[1024];
-                            arrayMessageToRead.add(str);
-
-                            try {
-                                Thread.sleep(DELAY_TO_SEND);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-
-                            if(arrayMessageToRead.size()>0){
-                                for(String str2 : arrayMessageToRead){
-                                    Log.i(TAG, "arrayMessage.get(i)="+str2);
-                                    updateTextView("Outro usuario: "+str2);
-                                    sendSayingTheNextNumber(str2);
-                                }
-                                arrayMessageToRead = new ArrayList<String>();
-                            }
-                        } catch (IOException e) {
-                            Log.e(TAG, e.getMessage());
-                        }
-                    }
-                }
-            }).start();
+            threadWriteMessages(printStream);
+            threadReadMessages(mmInStream);
 
             return null;
         }
+    }
+
+    private void threadWriteMessages(final PrintStream printStream){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    printMessages(printStream);
+                }
+            }
+        }).start();
+    }
+
+    private void threadReadMessages(final InputStream inputStream){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                readMessages(inputStream);
+            }
+        }).start();
     }
 
 }
