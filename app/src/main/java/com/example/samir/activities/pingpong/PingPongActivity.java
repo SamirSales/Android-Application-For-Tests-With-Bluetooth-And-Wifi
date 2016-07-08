@@ -46,7 +46,6 @@ public abstract class PingPongActivity extends Activity{
 
     private Button serverBtn;
     private Button clientBtn;
-    private Button searchBtn;
     private TextView textStatus;
     private TextView receivedDataTextView;
 
@@ -66,7 +65,6 @@ public abstract class PingPongActivity extends Activity{
     protected void setViews(){
         receivedDataTextView = (TextView)findViewById(R.id.textRecebido);
         textStatus = (TextView)findViewById(R.id.textStatus);
-        searchBtn = (Button)findViewById(R.id.search_btn);
         serverBtn = (Button)findViewById(R.id.server_btn);
         clientBtn = (Button)findViewById(R.id.client_btn);
     }
@@ -172,10 +170,6 @@ public abstract class PingPongActivity extends Activity{
                     clientBtn.setVisibility(View.INVISIBLE);
                     clientBtn.setEnabled(false);
                 }
-                if (searchBtn != null) {
-                    searchBtn.setVisibility(View.INVISIBLE);
-                    searchBtn.setEnabled(false);
-                }
                 if (serverBtn != null) {
                     serverBtn.setVisibility(View.INVISIBLE);
                     serverBtn.setEnabled(false);
@@ -227,6 +221,7 @@ public abstract class PingPongActivity extends Activity{
                         sendSayingTheNextNumber(str2);
                     }
                     arrayMessageToRead = new ArrayList<>();
+                    buffer = new byte[1024];
                 }
             } catch (IOException e) {
                 e.printStackTrace();

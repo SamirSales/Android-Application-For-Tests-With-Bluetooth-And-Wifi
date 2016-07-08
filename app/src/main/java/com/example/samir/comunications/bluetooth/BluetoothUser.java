@@ -5,9 +5,9 @@ import android.app.ProgressDialog;
 import android.os.Handler;
 import android.util.Log;
 
+import com.example.samir.comunications.SettingsBluetooth;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
-import com.example.samir.activities.R;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +30,7 @@ public abstract class BluetoothUser implements Communication {
     private Handler handler;
     private InputStream inputStream = null;
     private OutputStream outputStream = null;
-    private ProgressDialog dialogWaitConnection;
+    private ProgressDialog progressDialogWaitConnection;
     private WriterBluetooth writerThread;
     private int errorCounter = 0;
 
@@ -43,30 +43,23 @@ public abstract class BluetoothUser implements Communication {
     }
 
     protected void setDialogWaitConnection(){
-        dialogWaitConnection = new ProgressDialog(activity);
-        dialogWaitConnection.setIcon(R.drawable.ic_launcher);
-        dialogWaitConnection.setTitle("Aguarde!");
-        dialogWaitConnection.setMessage("conectando...");
-        dialogWaitConnection.setCanceledOnTouchOutside(false);
-        dialogWaitConnection.setCancelable(false);
-        dialogWaitConnection.setIndeterminate(false);
-        dialogWaitConnection.setOnCancelListener(null);
+        progressDialogWaitConnection = SettingsBluetooth.progressDialogWaitForConnection(activity);
     }
 
     public void showDialogWaitConnection(){
-        if (!dialogWaitConnection.isShowing()) {
+        if (!progressDialogWaitConnection.isShowing()) {
             activity.runOnUiThread(new Thread() {
                 @Override
                 public void run() {
-                    dialogWaitConnection.show();
+                    progressDialogWaitConnection.show();
                 }
             });
         }
     }
 
     public void closeDialogWaitConnection(){
-        if (dialogWaitConnection.isShowing()) {
-            dialogWaitConnection.dismiss();
+        if (progressDialogWaitConnection.isShowing()) {
+            progressDialogWaitConnection.dismiss();
         }
     }
 

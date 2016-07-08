@@ -61,11 +61,8 @@ public class MyPagerAdapter extends PagerAdapter {
     public Object instantiateItem(ViewGroup container, int position) {
 
         ImageView imageView = new ImageView(context);
-
         final ImageItem imageItem = arrayICS.get(position);
-
         imageView.setImageResource(imageItem.getImageResource());
-
 
         LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
@@ -82,15 +79,12 @@ public class MyPagerAdapter extends PagerAdapter {
         layout.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-
-                Toast.makeText(context,
-                        imageItem.getTitle(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(context,imageItem.getTitle(), Toast.LENGTH_SHORT).show();
                 if(bluetoothConnectedThreadServer != null){
                     imageItem.actionPressPageImageCS(bluetoothConnectedThreadServer);
                 }
             }});
 
-        Log.i("ImagePagerActivity", "COMANDO " + position);
         container.addView(layout);
         return layout;
     }

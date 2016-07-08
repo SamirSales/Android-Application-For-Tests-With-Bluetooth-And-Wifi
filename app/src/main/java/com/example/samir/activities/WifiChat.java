@@ -2,31 +2,16 @@ package com.example.samir.activities;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.wifi.WpsInfo;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pInfo;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.samir.comunications.SettingsWifi;
+import com.example.samir.comunications.threads.WifiSocketServerThread;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +26,7 @@ import java.util.ArrayList;
  * Created by Samir Sales on 19/02/15.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoListener{
+public class WifiChat extends Activity{
 
     private static final String TAG = "WifiChat";
 
@@ -50,23 +35,12 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
     private TextView textStatus;
     private Button server_btn;
     private Button client_btn;
-    private Button search_btn;
-
-    private final IntentFilter intentFilter = new IntentFilter();
-    private WifiP2pManager.Channel mChannel;
-    private WifiP2pManager mManager;
 
     private MyClientTask myClientTask;
     private ArrayList<String> arrayMessageToRead;
     private ArrayList<String> arrayMessageToSend;
 
-    private SocketServerThread socketServerThread;
-
-    private WiFiDirectBroadcastReceiver receiver;
-
-    private ArrayList<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-
-    private WifiP2pManager.PeerListListener peerListListener;
+//    private SocketServerThread socketServerThread;
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
@@ -76,60 +50,17 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
 
         arrayMessageToRead = new ArrayList<>();
         arrayMessageToSend = new ArrayList<>();
-        socketServerThread = null;
+//        socketServerThread = null;
         myClientTask = null;
 
         editText = (EditText)findViewById(R.id.editText);
         receivedDataTextView = (TextView)findViewById(R.id.textRecebido);
         textStatus = (TextView)findViewById(R.id.textStatus);
-        search_btn = (Button)findViewById(R.id.search_btn);
         server_btn = (Button)findViewById(R.id.server_btn);
         client_btn = (Button)findViewById(R.id.client_btn);
-
-        //  Indicates a change in the Wi-Fi P2P status.
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-
-        // Indicates a change in the list of available peers.
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-
-        // Indicates the state of Wi-Fi P2P connectivity has changed.
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-
-        // Indicates this device's details have changed.
-        intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-
-        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        mChannel = mManager.initialize(this, getMainLooper(), null);
-        receiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
-    }
-
-    /** register the BroadcastReceiver with the intent values to be matched */
-    @Override
-    public void onResume() {
-        super.onResume();
-        registerReceiver(receiver, intentFilter);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        unregisterReceiver(receiver);
-    }
-
-    @Override
-    public void onStop(){
-        super.onStop();
-    }
-
-    public void searchDevicesBtn(View view){
-        fetchListOfPeers();
-        listOfPeersWifiDialog();
     }
 
     public void clientActionBtn(View view){
-        if(myClientTask != null && socketServerThread == null){
-            //TODO
-        }
         try {
             myClientTask = new MyClientTask(SettingsWifi.IP_SERVER, SettingsWifi.HOST);
             myClientTask.execute();
@@ -138,9 +69,33 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
         }
     }
 
+    private WifiSocketServerThread wifiSocketServerThread;
+
     public void serverActionBtn(View view){
-        socketServerThread = new SocketServerThread();
-        socketServerThread.start();
+        wifiSocketServerThread = new WifiSocketServerThread(new WifiSocketServerThread.OnWifiServerThread() {
+            @Override
+            public void onStartWaitConnection(final ServerSocket serverSocket) {
+                WifiChat.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        receivedDataTextView.setText("I'm waiting here: " + serverSocket.getLocalPort());
+                        updateStatusOfConnection();
+                    }
+                });
+            }
+            @Override
+            public void onNewConnection(int connectionCounter, final String message, Socket socket) {
+                WifiChat.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        receivedDataTextView.setText(message);
+                    }
+                });
+                SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread(socket, connectionCounter);
+                socketServerReplyThread.run();
+            }
+        });
+        wifiSocketServerThread.start();
     }
 
     public void updateStatusOfConnection(){
@@ -153,10 +108,8 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
             public void run() {
                 textStatus.setText(mgs);
                 client_btn.setVisibility(View.INVISIBLE);
-                search_btn.setVisibility(View.INVISIBLE);
                 server_btn.setVisibility(View.INVISIBLE);
                 client_btn.setEnabled(false);
-                search_btn.setEnabled(false);
                 server_btn.setEnabled(false);
             }
         });
@@ -169,7 +122,6 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
             arrayMessageToSend.add(msg);
             editText.setText("");
         }
-
     }
 
     public void updateTextView(final String text){
@@ -181,241 +133,75 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
         });
     }
 
-    private void listOfPeersWifiDialog(){
-        if(peers.size()>0){
-            final Dialog dialog = new Dialog(this);
-            dialog.setContentView(R.layout.paired_devices_list);
-            dialog.setCancelable(true);
-            dialog.setCanceledOnTouchOutside(false);
-
-            String arrayPeers[] = new String[peers.size()];
-            for(int i=0; i<arrayPeers.length; i++){
-                arrayPeers[i] = peers.get(i).deviceName;
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                    android.R.layout.simple_list_item_1, android.R.id.text1, arrayPeers);
-
-            Button btnBack = (Button) dialog.findViewById(R.id.btnVoltarBluetooth);
-            btnBack.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    dialog.dismiss();
-                }
-            });
-
-            ListView pairedDevicesLV = (ListView) dialog
-                    .findViewById(R.id.pairedDevicesListView);
-            pairedDevicesLV.setAdapter(adapter);
-            pairedDevicesLV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    //conectar...
-                    connectToAPeer(peers.get(position));
-                    dialog.dismiss();
-                }
-            });
-            dialog.show();
-        }else{
-            Toast.makeText(this,"Nenhum par encontrado ainda! Tente de novo, daqui a pouco!",Toast.LENGTH_LONG).show();
-        }
-    }
-
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    private void fetchListOfPeers(){
-        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
-
-            @Override
-            public void onSuccess() {
-                Log.i(TAG,"Procurando dispositivos...");
-
-                peerListListener = new WifiP2pManager.PeerListListener() {
-                    @Override
-                    public void onPeersAvailable(WifiP2pDeviceList peerList) {
-
-                        peers.clear();
-                        peers.addAll(peerList.getDeviceList());
-
-                        if (peers.size() == 0) {
-                            Log.d(TAG, "Nenhum dispositivo encontrado.");
-                            return;
-                        }
-                    }
-                };
-
-                //imprime o nome dos dispositivos
-                for(int i=0; i<peers.size(); i++){
-                    WifiP2pDevice wDev = peers.get(i);
-                    Log.i(TAG,"peer: "+wDev.deviceName);
-                }
-            }
-
-            @Override
-            public void onFailure(int reasonCode) {
-                Toast.makeText(WifiChat.this, "Falha na procura de dispositivos!", Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
-    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    private void connectToAPeer(WifiP2pDevice device){
-
-        WifiP2pConfig config = new WifiP2pConfig();
-        config.deviceAddress = device.deviceAddress;
-        config.wps.setup = WpsInfo.PBC;
-
-        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                    Log.i(TAG,"Pedido de conexao realizado com sucesso!!!");
-                }
-
-            @Override
-            public void onFailure(int reason) {
-                Toast.makeText(WifiChat.this, "Connect failed. Retry.",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    /*
-    will notify you when the state of the connection changes
-     */
-    @Override
-    public void onConnectionInfoAvailable(WifiP2pInfo info) {
-        // InetAddress from WifiP2pInfo struct.
-        //InetAddress groupOwnerAddress = info.groupOwnerAddress.getHostAddress();
-
-        // After the group negotiation, we can determine the group owner.
-        if (info.groupFormed && info.isGroupOwner) {
-            // Do whatever tasks are specific to the group owner.
-            // One common case is creating a server thread and accepting
-            // incoming connections.
-        } else if (info.groupFormed) {
-            // The other device acts as the client. In this case,
-            // you'll want to create a client thread that connects to the group
-            // owner.
-        }
-    }
-
-    class WiFiDirectBroadcastReceiver extends BroadcastReceiver{
-
-        private WifiP2pManager.Channel mChannel;
-        private WifiP2pManager mManager;
-        private Context context;
-
-        public WiFiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel, Context context){
-            super();
-            this.mManager = mManager;
-            this.mChannel = mChannel;
-            this.context = context;
-        }
-
-        @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)) {
-
-                int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
-                if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-                    Log.i(TAG, "wifiP2pEnabled = true;");
-                } else {
-                    Log.i(TAG, "wifiP2pEnabled = false;");
-                }
-
-            } else if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
-
-                if (mManager != null) {
-                    mManager.requestPeers(mChannel, peerListListener);
-                }
-                Log.d(TAG, "The peer list has changed!");
-
-            } else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
-
-                // Connection state changed!  We should probably do something about that.
-                Log.i(TAG, "WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION");
-
-            } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
-                Log.i(TAG, "WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION");
-
-            }
-        }
-    }
-
     private String message = "";
-    private ServerSocket serverSocket;
 
-    private class SocketServerThread extends Thread {
-        int count = 0;
-        OutputStream outputStream = null;
-        InputStream inputStream = null;
-        boolean serverRunning = false;
+    private void threadReader(final InputStream inputStream){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                byte[] buffer = new byte[1024];
 
-        @Override
-        public void run() {
-            try {
-                serverSocket = new ServerSocket(SettingsWifi.HOST);
-                WifiChat.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        receivedDataTextView.setText("I'm waiting here: " + serverSocket.getLocalPort());
-                        updateStatusOfConnection();
-                    }
-                });
-
-                if(!serverRunning){
-                    serverRunning = true;
-
-                    /*
-                    Essa eh pra ser a parte onde o servidor fica esperando conexoes
-                     */
-                    while (serverRunning) {
-                        Socket socket = serverSocket.accept();
-                        outputStream = socket.getOutputStream();
-                        inputStream = socket.getInputStream();
-
-                        count++;
-                        message += "#"+count+" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
-
-                        WifiChat.this.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                receivedDataTextView.setText(message);
+                while (true){
+                    try {
+                        inputStream.read(buffer);
+                        String str = new String(buffer).trim();
+                        arrayMessageToRead.add(str);
+                        if(arrayMessageToRead.size()>0){
+                            for(String str2 : arrayMessageToRead){
+                                updateTextView("Outro usuario: "+str2);
                             }
-                        });
-
-                        SocketServerReplyThread socketServerReplyThread =
-                                new SocketServerReplyThread(socket, count);
-                        socketServerReplyThread.run();
-
+                            arrayMessageToRead = new ArrayList<>();
+                            buffer = new byte[1024];
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
+            }
+        }).start();
+    }
 
-            } catch (IOException e) {e.printStackTrace();}
-        }
+    private void threadWriter(final PrintStream printStream){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    if(arrayMessageToSend.size()>0){
+                        for(String str : arrayMessageToSend){
+                            printStream.print(str);
+                            updateTextView("Eu: "+str);
+                        }
+                        arrayMessageToSend = new ArrayList<String>();
+                    }
+                }
+            }
+        }).start();
     }
 
     private class SocketServerReplyThread extends Thread {
 
         private Socket hostThreadSocket;
-        private int cnt;
+        private int connectionCounter = 0;
+        private OutputStream outputStream;
+        private InputStream inputStream;
+        private PrintStream printStream;
 
-        public SocketServerReplyThread(Socket socket, int c) {
+        public SocketServerReplyThread(Socket socket, int connectionCounter) {
             hostThreadSocket = socket;
-            cnt = c;
+            this.connectionCounter = connectionCounter;
         }
 
         @Override
         public void run() {
-            OutputStream outputStream;
-            InputStream inputStream;
-            String msgReply = "Hello from Android, you are #" + cnt;
+
+            String msgReply = "Hello from Android, you are #" + connectionCounter;
 
             try {
                 outputStream = hostThreadSocket.getOutputStream();
                 inputStream = hostThreadSocket.getInputStream();
-                PrintStream printStream = new PrintStream(outputStream);
-                printStream.print(msgReply);
+                printStream = new PrintStream(outputStream);
+//                printStream.print(msgReply);
+                arrayMessageToSend.add(msgReply);
                 updateStatusOfConnection();
 
                 message += "replayed: " + msgReply + "\n";
@@ -427,56 +213,8 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
                     }
                 });
 
-                final PrintStream printStream2 = printStream;
-                final InputStream inputStream2 = inputStream;
-
-                //NEWS HERE... TODO
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while (true){
-
-                            if(arrayMessageToSend.size()>0){
-                                for(String str : arrayMessageToSend){
-                                    Log.i(TAG, "arrayMessage.get(i)="+str);
-                                    printStream2.print(str);
-                                    updateTextView("Eu: "+str);
-                                }
-                                arrayMessageToSend = new ArrayList<String>();
-                            }
-
-                        }
-                    }
-                }).start();
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        byte[] buffer = new byte[1024];  // buffer store for the stream
-                        //se tiver algo no read(), imprime
-                        while (true){
-                            try {
-                                // Read from the InputStream
-                                inputStream2.read(buffer);
-                                // Send the obtained bytes to the UI activity
-                                String str = new String (buffer);
-                                str = str.trim();
-                                buffer = new byte[1024];
-                                arrayMessageToRead.add(str);
-
-                                if(arrayMessageToRead.size()>0){
-                                    for(String str2 : arrayMessageToRead){
-                                        updateTextView("Outro usuario: "+str2);
-                                    }
-                                    arrayMessageToRead = new ArrayList<>();
-                                }
-                            } catch (IOException e) {
-                                Log.e(TAG, e.getMessage());
-                            }
-                        }
-                    }
-                }).start();
-
+                threadWriter(printStream);
+                threadReader(inputStream);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -513,73 +251,23 @@ public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoL
             OutputStream tmpOut = null;
 
             try {
-                socket = new Socket(ip, host);
+                socket = new Socket(ip, host);//TODO NO HOST FOUND
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
             } catch (UnknownHostException e) {
-                Log.e(TAG,e.getMessage());
+                e.printStackTrace();
             } catch(IOException e) {
-                Log.e(TAG,e.getMessage());
+                e.printStackTrace();
             }
-
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
 
-            if(socketServerThread == null){
+            if(wifiSocketServerThread == null){
                 connectionNotification("client host:" + SettingsWifi.HOST);
             }
-
             printStream = new PrintStream(mmOutStream);
-
-            //TODO ESCRITA
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (true){
-
-                        if(arrayMessageToSend.size()>0){
-                            for(String str : arrayMessageToSend){
-                                updateTextView("Eu: "+str);
-                                Log.i(TAG, "cliente envia = " + str);
-                                printStream.print(str);
-                            }
-                            arrayMessageToSend = new ArrayList<String>();
-                        }
-                    }
-                }
-            }).start();
-
-            //TODO LEITURA
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    byte[] buffer = new byte[1024];  // buffer store for the stream
-                    int bytes; // bytes returned from read()
-
-                    while (true) {
-                        try {
-                            // Read from the InputStream
-                            bytes = mmInStream.read(buffer);
-                            Log.i(TAG,"bytes = "+bytes);
-                            // Send the obtained bytes to the UI activity
-                            String str = new String (buffer);
-                            str = str.trim();
-                            buffer = new byte[1024];
-                            arrayMessageToRead.add(str);
-
-                            if(arrayMessageToRead.size()>0){
-                                for(String str2 : arrayMessageToRead){
-                                    Log.i(TAG, "arrayMessage.get(i)="+str2);
-                                    updateTextView("Outro usuario: "+str2);
-                                }
-                                arrayMessageToRead = new ArrayList<String>();
-                            }
-                        } catch (IOException e) {
-                            Log.e(TAG, e.getMessage());
-                        }
-                    }
-                }
-            }).start();
+            threadWriter(printStream);
+            threadReader(mmInStream);
 
             return null;
         }
