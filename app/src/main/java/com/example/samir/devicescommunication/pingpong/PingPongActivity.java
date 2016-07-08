@@ -16,6 +16,9 @@ import android.widget.TextView;
 
 import com.example.samir.devicescommunication.R;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -29,13 +32,17 @@ public abstract class PingPongActivity extends Activity{
     private static String startTime;
     private long counter;
     private long counterOfCounter;
-    protected final int DELAY_TO_SEND = 300;
+    private final int DELAY_TO_SEND = 300;
+    private final int MAX_LINES_NUMBER = 10;
     private int batteryInitPercent;
     private int batteryPercent;
     private String batteryChargingStr;
     private Handler handler = new Handler();
 
+    private int lines = 0;
+
     private ArrayList<String> arrayMessageToSend;
+    private ArrayList<String> arrayMessageToRead;
 
     private Button serverBtn;
     private Button clientBtn;
@@ -44,6 +51,17 @@ public abstract class PingPongActivity extends Activity{
     private TextView receivedDataTextView;
 
     private PowerManager.WakeLock mWakeLock;
+
+    protected void startSettings(){
+        resetBatteryStatusCounters();
+        keepScreenOn();
+        setRegisterReceiverBatteryChanged();
+        resetCounters();
+        setStartTime();
+        setViews();
+        setArrayMessageToSend(new ArrayList<String>());
+        setArrayMessageToRead(new ArrayList<String>());
+    }
 
     protected void setViews(){
         receivedDataTextView = (TextView)findViewById(R.id.textRecebido);
@@ -119,7 +137,7 @@ public abstract class PingPongActivity extends Activity{
                 "horario  inicial: "+ startTime +"\n"+
                 "horario    final: "+endTime+"\n"+
                 "loop(s) number = "+counterOfCounter+"\n" +
-                "last count = "+counter+"\n"+
+                "last connectionCounter = "+counter+"\n"+
                 "bateria inicial = "+batteryInitPercent+"%\n"+
                 "bateria agora   = "+batteryPercent+"%";
     }
@@ -186,10 +204,67 @@ public abstract class PingPongActivity extends Activity{
         updateInfo();
     }
 
-    private int lines = 0;
+    protected void readMessages(InputStream inputStream){
+        byte[] buffer = new byte[1024];  // buffer store for the stream
+
+        while (true){
+            try {
+                // Read from the InputStream
+                inputStream.read(buffer);
+                // Send the obtained bytes to the UI activity
+                String str = new String (buffer);
+                str = str.trim();
+                arrayMessageToRead.add(str);
+
+                try {
+                    Thread.sleep(DELAY_TO_SEND);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if(arrayMessageToRead.size()>0){
+                    for(String str2 : arrayMessageToRead){
+                        updateTextView("Outro usuario: "+str2);
+                        sendSayingTheNextNumber(str2);
+                    }
+                    arrayMessageToRead = new ArrayList<>();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    protected void printMessages(PrintStream printStream){
+        if(getArrayMessageToSend().size()>0){
+            for(String str : getArrayMessageToSend()){
+                printStream.print(str);
+            }
+            setArrayMessageToSend(new ArrayList<String>());
+        }
+    }
+
+    protected void threadWriteMessages(final PrintStream printStream){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    printMessages(printStream);
+                }
+            }
+        }).start();
+    }
+
+    protected void threadReadMessages(final InputStream inputStream){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                readMessages(inputStream);
+            }
+        }).start();
+    }
 
     public void updateTextView(final String text){
-        if(lines >= 6){
+        if(lines >= MAX_LINES_NUMBER){
             lines = 1;
             runOnUiThread(new Runnable() {
                 @Override
@@ -208,9 +283,10 @@ public abstract class PingPongActivity extends Activity{
         });
     }
 
-    protected void updateInfo(){
-
-    }
+    /**
+     * This method should be override
+     */
+    protected void updateInfo(){}
 
     protected void incrementCounterOfCounter(){
         counterOfCounter++;
@@ -234,6 +310,10 @@ public abstract class PingPongActivity extends Activity{
 
     public void setArrayMessageToSend(ArrayList<String> arrayMessageToSend) {
         this.arrayMessageToSend = arrayMessageToSend;
+    }
+
+    public void setArrayMessageToRead(ArrayList<String> arrayMessageToRead){
+        this.arrayMessageToRead = arrayMessageToRead;
     }
 
     public ArrayList<String> getArrayMessageToSend(){

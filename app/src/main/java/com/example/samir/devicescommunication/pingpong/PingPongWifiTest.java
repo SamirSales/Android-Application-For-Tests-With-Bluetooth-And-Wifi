@@ -1,27 +1,10 @@
 package com.example.samir.devicescommunication.pingpong;
 
 import android.annotation.TargetApi;
-import android.app.Dialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.wifi.WpsInfo;
-import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
-import android.net.wifi.p2p.WifiP2pInfo;
-import android.net.wifi.p2p.WifiP2pManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.Toast;
 
 import com.example.samir.comunications.SettingsWifi;
 import com.example.samir.devicescommunication.R;
@@ -33,7 +16,6 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 
 /**
  * Created by Samir Sales on 27/02/15.
@@ -41,12 +23,10 @@ import java.util.ArrayList;
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 public class PingPongWifiTest extends PingPongActivity {
 
-    private WifiP2pManager mManager;
-
     private MyClientTask myClientTask;
-    private ArrayList<String> arrayMessageToRead;
-
     private SocketServerThread socketServerThread;
+    private String message = "";
+    private ServerSocket serverSocket;
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
@@ -54,23 +34,8 @@ public class PingPongWifiTest extends PingPongActivity {
         super.onCreate(bundle);
         setContentView(R.layout.activity_ping_pong_test);
 
-        resetBatteryStatusCounters();
-        keepScreenOn();
-        setRegisterReceiverBatteryChanged();
-        resetCounters();
-        setStartTime();
-        setArrayMessageToSend(new ArrayList<String>());
-
-        arrayMessageToRead = new ArrayList<>();
+        startSettings();
         socketServerThread = null;
-
-        setViews();
-
-        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-    }
-
-    public void searchDevicesBtn(View view){
-        //doing nothing...
     }
 
     public void clientActionBtn(View view){
@@ -93,14 +58,11 @@ public class PingPongWifiTest extends PingPongActivity {
         setUserAndEndTime((myClientTask != null), endTime);
     }
 
-    private String message = "";
-    private ServerSocket serverSocket;
-
     /**
      * This class is used to the server wait for client connection.
      */
     private class SocketServerThread extends Thread {
-        int count = 0;
+        int connectionCounter = 0;
         OutputStream outputStream = null;
         InputStream inputStream = null;
         boolean serverRunning = false;
@@ -126,8 +88,8 @@ public class PingPongWifiTest extends PingPongActivity {
                         outputStream = socket.getOutputStream();
                         inputStream = socket.getInputStream();
 
-                        count++;
-                        message += "#"+count+" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
+                        connectionCounter++;
+                        message += "#"+ connectionCounter +" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
 
                         PingPongWifiTest.this.runOnUiThread(new Runnable() {
                             @Override
@@ -136,63 +98,11 @@ public class PingPongWifiTest extends PingPongActivity {
                             }
                         });
 
-                        SocketServerReplyThread socketServerReplyThread =
-                                new SocketServerReplyThread(socket, count);
+                        SocketServerReplyThread socketServerReplyThread = new SocketServerReplyThread(socket);
                         socketServerReplyThread.run();
                     }
                 }
-
             } catch (IOException e) {e.printStackTrace();}
-        }
-
-        public void write(byte[] bytes){
-            if(outputStream != null){
-                try {
-                    outputStream.write(bytes);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private void printMessages(PrintStream printStream){
-        if(getArrayMessageToSend().size()>0){
-            for(String str : getArrayMessageToSend()){
-                printStream.print(str);
-            }
-            setArrayMessageToSend(new ArrayList<String>());
-        }
-    }
-
-    private void readMessages(InputStream inputStream){
-        byte[] buffer = new byte[1024];  // buffer store for the stream
-
-        while (true){
-            try {
-                // Read from the InputStream
-                inputStream.read(buffer);
-                // Send the obtained bytes to the UI activity
-                String str = new String (buffer);
-                str = str.trim();
-                buffer = new byte[1024];
-                arrayMessageToRead.add(str);
-
-                try {
-                    Thread.sleep(DELAY_TO_SEND);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if(arrayMessageToRead.size()>0){
-                    for(String str2 : arrayMessageToRead){
-                        updateTextView("Outro usuario: "+str2);
-                        sendSayingTheNextNumber(str2);
-                    }
-                    arrayMessageToRead = new ArrayList<>();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -202,11 +112,9 @@ public class PingPongWifiTest extends PingPongActivity {
     private class SocketServerReplyThread extends Thread {
 
         private Socket hostThreadSocket;
-        int counter;
 
-        SocketServerReplyThread(Socket socket, int counter) {
+        public SocketServerReplyThread(Socket socket) {
             hostThreadSocket = socket;
-            this.counter = counter;
         }
 
         @Override
@@ -242,27 +150,17 @@ public class PingPongWifiTest extends PingPongActivity {
      */
     public class MyClientTask extends AsyncTask {
 
-        Socket socket;
-        InputStream mmInStream;
-        OutputStream mmOutStream;
+        private Socket socket;
+        private InputStream mmInStream;
+        private OutputStream mmOutStream;
 
-        String ip;
-        int host;
+        private String ip;
+        private int host;
+        private PrintStream printStream;
 
-        boolean myClientIsRunning;
-        PrintStream printStream;
-
-        MyClientTask(String ip, int host) throws IOException {
+        public MyClientTask(String ip, int host) throws IOException {
             this.ip = ip;
             this.host = host;
-            myClientIsRunning = false;
-        }
-
-        /* Call this from the main activity to send data to the remote device */
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) { }
         }
 
         @Override
@@ -294,26 +192,6 @@ public class PingPongWifiTest extends PingPongActivity {
 
             return null;
         }
-    }
-
-    private void threadWriteMessages(final PrintStream printStream){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true){
-                    printMessages(printStream);
-                }
-            }
-        }).start();
-    }
-
-    private void threadReadMessages(final InputStream inputStream){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                readMessages(inputStream);
-            }
-        }).start();
     }
 
 }

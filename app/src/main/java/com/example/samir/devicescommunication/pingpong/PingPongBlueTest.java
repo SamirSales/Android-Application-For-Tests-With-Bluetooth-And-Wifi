@@ -7,8 +7,6 @@ import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 
 import com.example.samir.comunications.CommunicationFactory;
@@ -21,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.UUID;
 
 /**
@@ -34,25 +31,14 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
     private static ConnectThreadBluePingTest connectedThreadServer;
     private static boolean connectionStarted;
     private Communication communication = null;
-
     private AcceptThread acceptThread;
-
-    private ArrayList<String> arrayMessageToRead;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ping_pong_bleutooth);
 
-        keepScreenOn();
-        setStartTime();
-        setRegisterReceiverBatteryChanged();
-        resetCounters();
-        setViews();
-        setArrayMessageToSend(new ArrayList<String>());
-
-        arrayMessageToRead = new ArrayList<>();
-
+        startSettings();
         connectedThreadServer = null;
         connectionStarted = false;
     }
@@ -75,22 +61,6 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         builder.show();
     }
 
-    int count_update = 0;
-
-    private void updateReceivedText(final String text){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if(count_update >= 6){
-                    count_update = 0;
-                    setReceivedDataTextView("");
-                }
-                count_update++;
-                setReceivedDataTextView(getReceivedDataText()+text+"\n");
-            }
-        });
-    }
-
     public void initConnection() {
         if(!connectionStarted){
             initCommunication(EnumConnection.BLUETOOTH_CLIENT);
@@ -105,27 +75,6 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void updateInfo(){
         String endTime = getCurrentTime();
         setUserAndEndTime((connectedThreadServer == null), endTime);
@@ -134,11 +83,11 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
     @Override
     public void update(byte[] data) {
         // bluetooth client reading...
-        String str =  new String(data);
-        updateReceivedText("Recebido:" + str);
-        sendSayingTheNextNumber(str);
-        String str2 = getCounter()+"";
-        communication.send(str2.getBytes());
+        String dataStr =  new String(data);
+        updateTextView("Recebido:" + dataStr);
+        sendSayingTheNextNumber(dataStr);
+        String counterStr = getCounter()+"";
+        communication.send(counterStr.getBytes());
     }
 
     @Override
@@ -201,8 +150,7 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         }
 
         private void manageConnectedSocket(BluetoothSocket socket) {
-            final ArrayList<String> arrayMessage = new ArrayList<String>();
-            connectedThreadServer =  new ConnectThreadBluePingTest(socket, arrayMessage);
+            connectedThreadServer =  new ConnectThreadBluePingTest(socket);
             connectedThreadServer.start();
         }
 
@@ -224,13 +172,16 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
         }
     }
 
+    /**
+     * This class does the bluetooth server communication interaction.
+     */
     public class ConnectThreadBluePingTest extends Thread {
+
         private final InputStream mmInStream;
         private final OutputStream mmOutStream;
-
         private PrintStream printStream;
 
-        public ConnectThreadBluePingTest(BluetoothSocket socket, ArrayList<String> arrayMessage) {
+        public ConnectThreadBluePingTest(BluetoothSocket socket) {
             InputStream tmpIn = null;
             OutputStream tmpOut = null;
 
@@ -243,72 +194,12 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
 
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
-
             printStream = new PrintStream(mmOutStream);
         }
 
         public void run() {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    readMessages(mmInStream);
-                }
-            }).start();
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    while (true){
-                        printMessages(printStream);
-                    }
-                }
-            }).start();
-        }
-
-        /* Call this from the main activity to send data to the remote device */
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) { }
-        }
-    }
-
-    private void printMessages(PrintStream printStream){
-        if(getArrayMessageToSend().size()>0){
-            for(String str : getArrayMessageToSend()){
-                printStream.print(str);
-            }
-            setArrayMessageToSend(new ArrayList<String>());
-        }
-    }
-
-    private void readMessages(InputStream inputStream){
-        byte[] buffer = new byte[1024];  // buffer store for the stream
-
-        while (true){
-            try {
-                // Read from the InputStream
-                inputStream.read(buffer);
-                // Send the obtained bytes to the UI activity
-                String str = new String (buffer);
-                str = str.trim();
-                arrayMessageToRead.add(str);
-
-                try {
-                    Thread.sleep(DELAY_TO_SEND);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if(arrayMessageToRead.size()>0){
-                    for(String str2 : arrayMessageToRead){
-                        updateTextView("Recebido: "+str2);
-                        sendSayingTheNextNumber(str2);
-                    }
-                    arrayMessageToRead = new ArrayList<>();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            threadWriteMessages(printStream);
+            threadReadMessages(mmInStream);
         }
     }
 
