@@ -9,13 +9,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.example.samir.comunicacaodedispositivos.ConnectedThread;
-import com.example.samir.objetos.ImagemComStr;
+import com.example.samir.devicescommunication.ConnectedThread;
+import com.example.samir.objects.ImagemComStr;
 
 import java.util.ArrayList;
 
 /**
- * Created by samir on 13/02/15.
+ * Created by Samir Sales on 13/02/15.
  */
 public class MyPagerAdapter extends PagerAdapter {
 
@@ -46,9 +46,9 @@ public class MyPagerAdapter extends PagerAdapter {
 
     @Override
     public void setPrimaryItem(ViewGroup container, int position, Object object){
-        ImagemComStr im = arrayICS.get(position);
+        ImagemComStr imagemComStr = arrayICS.get(position);
         if(connectedThreadServer != null){
-            im.actionUpDateImageCS(position,connectedThreadServer);
+            imagemComStr.actionUpDateImageCS(position, connectedThreadServer);
         }
     }
 
@@ -62,9 +62,9 @@ public class MyPagerAdapter extends PagerAdapter {
 
         ImageView imageView = new ImageView(context);
 
-        final ImagemComStr ics = arrayICS.get(position);
+        final ImagemComStr imagemComStr = arrayICS.get(position);
 
-        imageView.setImageResource(ics.getImageResourse());
+        imageView.setImageResource(imagemComStr.getImageResourse());
 
 
         LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
@@ -75,7 +75,7 @@ public class MyPagerAdapter extends PagerAdapter {
         layout.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-        layout.setBackgroundColor(ics.getColor());
+        layout.setBackgroundColor(imagemComStr.getColor());
         layout.setLayoutParams(layoutParams);
         layout.addView(imageView);
 
@@ -84,14 +84,13 @@ public class MyPagerAdapter extends PagerAdapter {
             public void onClick(View v) {
 
                 Toast.makeText(context,
-                        ics.getTitulo(), Toast.LENGTH_SHORT).show();
+                        imagemComStr.getTitulo(), Toast.LENGTH_SHORT).show();
                 if(connectedThreadServer != null){
-                    ics.actionPressPageImageCS(connectedThreadServer);
+                    imagemComStr.actionPressPageImageCS(connectedThreadServer);
                 }
             }});
 
         Log.i("TestImagens", "COMANDO " + position);
-
         container.addView(layout);
         return layout;
     }

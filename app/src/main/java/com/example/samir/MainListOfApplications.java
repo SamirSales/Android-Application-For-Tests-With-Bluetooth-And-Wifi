@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -8,12 +8,19 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.example.samir.devicescommunication.BluetoothChat;
+import com.example.samir.devicescommunication.P2PWifiChat;
+import com.example.samir.devicescommunication.pingpong.PingPongBlueTest;
+import com.example.samir.devicescommunication.pingpong.PingPongWifiTest;
+import com.example.samir.devicescommunication.R;
+import com.example.samir.devicescommunication.TestImagens;
+
 /**
- * Created by samir on 19/02/15.
+ * Created by Samir Sales on 19/02/15.
  */
 public class MainListOfApplications extends Activity implements AdapterView.OnItemClickListener{
 
-    ListView listView;
+    private ListView listView;
 
     @Override
     public void onCreate(Bundle bundle){
@@ -23,10 +30,10 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
         String[] arrayTestes = new String[] {
                 "Chat Bluetooth",
                 "Imagens + Bluetooth",
-                "Testes P2P Wifi",
+                "Chat Wifi P2P",
                 "Teste Ping-Pong Wifi P2P",
-                "Teste Ping-Pong Bluetooth",
-                "Chat Bluetooth LE"};
+                "Teste Ping-Pong Bluetooth"};
+
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, arrayTestes);
 
@@ -50,23 +57,18 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 break;
             case 2:
                 //Testes P2P Wifi
-                Intent intent2 = new Intent(this, ComunicacaoWifiP2P.class);
+                Intent intent2 = new Intent(this, P2PWifiChat.class);
                 startActivity(intent2);
                 break;
             case 3:
                 //Testes P2P Wifi
-                Intent intent3 = new Intent(this, PingPongTest.class);
+                Intent intent3 = new Intent(this, PingPongWifiTest.class);
                 startActivity(intent3);
                 break;
             case 4:
                 //Testes P2P Bluetooth
                 Intent intent4 = new Intent(this, PingPongBlueTest.class);
                 startActivity(intent4);
-                break;
-            case 5:
-                //Bluetooth Low Energy
-                Intent intent5 = new Intent(this, BluetoothLowEnergy.class);
-                startActivity(intent5);
                 break;
             default:
                 break;

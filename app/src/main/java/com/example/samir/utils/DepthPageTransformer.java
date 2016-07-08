@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.utils;
 
 import android.annotation.TargetApi;
 import android.os.Build;
@@ -6,7 +6,7 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 
 /**
- * Created by samir on 11/02/15.
+ * Created by Samir Sales on 11/02/15.
  */
 public class DepthPageTransformer implements ViewPager.PageTransformer {
     private static final float MIN_SCALE = 0.75f;

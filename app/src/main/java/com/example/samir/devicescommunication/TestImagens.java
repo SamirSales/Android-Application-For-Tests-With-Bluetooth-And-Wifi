@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -13,18 +13,19 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.samir.adapter.MyPagerAdapter;
-import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.enums.EnumConnection;
+import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
-import com.example.samir.comunications.Observer;
-import com.example.samir.comunications.EnumConexao;
-import com.example.samir.objetos.ImagemComStr;
+import com.example.samir.comunications.interfaces.Observer;
+import com.example.samir.objects.ImagemComStr;
+import com.example.samir.utils.DepthPageTransformer;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
 /**
- * Created by samir on 10/02/15.
+ * Created by Samir Sales on 10/02/15.
  */
 
 public class TestImagens extends Activity implements Observer {
@@ -81,12 +82,12 @@ public class TestImagens extends Activity implements Observer {
 
     public void initConnection() {
         if(!connectionStarted){
-            iniciarComunicacao(EnumConexao.BLUETOOTH_CLIENT);
+            iniciarComunicacao(EnumConnection.BLUETOOTH_CLIENT);
             connectionStarted = true;
         }
     }
 
-    public void iniciarComunicacao(EnumConexao con) {
+    public void iniciarComunicacao(EnumConnection con) {
         communication = new CommunicationFactory(this, con).getCommunication();
         communication.addObserver(TestImagens.this);
         communication.open();

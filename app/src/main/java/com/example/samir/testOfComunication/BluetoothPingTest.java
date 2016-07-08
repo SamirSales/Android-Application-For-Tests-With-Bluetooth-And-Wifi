@@ -18,9 +18,9 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
-import com.example.samir.comunicacaodedispositivos.R;
-import com.example.samir.comunications.Communication;
-import com.example.samir.comunications.Observer;
+import com.example.samir.devicescommunication.R;
+import com.example.samir.comunications.interfaces.Communication;
+import com.example.samir.comunications.interfaces.Observer;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Created by samir on 03/03/15.
+ * Created by Samir Sales on 03/03/15.
  */
 public class BluetoothPingTest implements Communication {
     private Activity context;
@@ -76,19 +76,7 @@ public class BluetoothPingTest implements Communication {
      */
     @Override
     public void open() {
-
-//        AppConfigDB db = new AppConfigDB(context);
-//        db.open();
-//        AppConfig config = db.getConfig();
-//        db.close();
-
-//        if (config.getConexao() == EnumConexao.NULL) {
         showBluetoothDialog();
-//        } else {
-//            BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-//            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(config.getUuid());
-//            new ConnectionTask(device).execute();
-//        }
     }
 
     /**
@@ -253,7 +241,7 @@ public class BluetoothPingTest implements Communication {
      * @param o um observador
      */
     @Override
-    public void remObserver(Observer o) {
+    public void removeObserver(Observer o) {
         observers.remove(o);
     }
 

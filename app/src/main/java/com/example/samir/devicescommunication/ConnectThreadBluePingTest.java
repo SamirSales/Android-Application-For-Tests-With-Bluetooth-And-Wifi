@@ -1,24 +1,22 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
-import android.os.Handler;
+import android.bluetooth.BluetoothSocket;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 
 /**
- * Created by samir on 23/02/15.
+ * Created by Samir Sales on 03/03/15.
  */
-public class ConnectServerWifi extends Thread {
-    private final Socket socket;
+public class ConnectThreadBluePingTest extends Thread {
     private final InputStream mmInStream;
     private final OutputStream mmOutStream;
     private ArrayList<String> arrayMessage;
 
-    public ConnectServerWifi(Socket socket1, ArrayList<String> arrayMessage) {
-        socket = socket1;
+    public ConnectThreadBluePingTest(BluetoothSocket socket, ArrayList<String> arrayMessage) {
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
         this.arrayMessage = arrayMessage;
@@ -26,8 +24,8 @@ public class ConnectServerWifi extends Thread {
         // Get the input and output streams, using temp objects because
         // member streams are final
         try {
-            tmpIn = socket1.getInputStream();
-            tmpOut = socket1.getOutputStream();
+            tmpIn = socket.getInputStream();
+            tmpOut = socket.getOutputStream();
         } catch (IOException e) { }
 
         mmInStream = tmpIn;
@@ -36,15 +34,14 @@ public class ConnectServerWifi extends Thread {
 
     public void run() {
         byte[] buffer = new byte[1024];  // buffer store for the stream
-        int bytes; // bytes returned from read()
 
         // Keep listening to the InputStream until an exception occurs
         while (true) {
             try {
                 // Read from the InputStream
-                bytes = mmInStream.read(buffer);
-                // Send the obtained bytes to the UI activity
+                mmInStream.read(buffer);
                 String str = new String (buffer);
+                Log.i("bluetooth","server recebe: "+str);
                 arrayMessage.add(str);
             } catch (IOException e) {
                 break;
@@ -56,13 +53,6 @@ public class ConnectServerWifi extends Thread {
     public void write(byte[] bytes) {
         try {
             mmOutStream.write(bytes);
-        } catch (IOException e) { }
-    }
-
-    /* Call this from the main activity to shutdown the connection */
-    public void cancel() {
-        try {
-            socket.close();
         } catch (IOException e) { }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.samir.comunicacaodedispositivos;
+package com.example.samir.devicescommunication;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,19 +12,16 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.example.samir.comunications.Communication;
+import com.example.samir.comunications.enums.EnumConnection;
+import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
-import com.example.samir.comunications.Observer;
-import com.example.samir.comunications.EnumConexao;
+import com.example.samir.comunications.interfaces.Observer;
 
 
 public class BluetoothChat extends Activity implements Observer {
 
-    private String TAG = "BluetoothChat";
-
     private EditText editText;
-    private Button btnSend;
-    private TextView textRecebido;
+    private TextView messageReceivedTextView;
     private TextView textConnected;
 
     private static boolean connectionStarted;
@@ -34,13 +31,12 @@ public class BluetoothChat extends Activity implements Observer {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_bluetooth_chat);
 
         connectionStarted = false;
 
         editText = (EditText)findViewById(R.id.editText);
-        btnSend = (Button)findViewById(R.id.btnSend);
-        textRecebido = (TextView)findViewById(R.id.textRecebido);
+        messageReceivedTextView = (TextView)findViewById(R.id.textRecebido);
         textConnected = (TextView)findViewById(R.id.textConnected);
     }
 
@@ -49,10 +45,22 @@ public class BluetoothChat extends Activity implements Observer {
         editText.setText("");
         newLineTextView("Enviado:" + msg);
         communication.send(msg.getBytes());
-
     }
 
-    public void conectarAction(View view){
+    public void connectAction(View view){
+        dialogBluetoothConnection();
+    }
+
+    private void newLineTextView(final String text){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                messageReceivedTextView.setText(messageReceivedTextView.getText().toString() + text + "\n");
+            }
+        });
+    }
+
+    private void dialogBluetoothConnection(){
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Conexão Bluetooth");
         builder.setMessage("Conectar-se como...");
@@ -71,36 +79,27 @@ public class BluetoothChat extends Activity implements Observer {
         builder.show();
     }
 
-    private void newLineTextView(final String text){
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                textRecebido.setText(textRecebido.getText().toString()+text+"\n");
-            }
-        });
-    }
-
+    /**
+     * This method makes the user connect as client.
+     */
     public void initClientConnection() {
         if(!connectionStarted){
-            iniciarComunicacaoModoCliente(EnumConexao.BLUETOOTH_CLIENT);
+            initCommunication(EnumConnection.BLUETOOTH_CLIENT);
             connectionStarted = true;
         }
     }
 
+    /**
+     * This method makes the user connect as server.
+     */
     public void initServerConnection(){
         if(!connectionStarted){
-            iniciarComunicacaoModoCliente(EnumConexao.BLUETOOTH_SERVER);
+            initCommunication(EnumConnection.BLUETOOTH_SERVER);
             connectionStarted = true;
         }
     }
 
-    public void iniciarComunicacaoModoServidor(EnumConexao con){
-        communication = new CommunicationFactory(this, con).getCommunication();
-        communication.addObserver(BluetoothChat.this);
-        communication.open();
-    }
-
-    public void iniciarComunicacaoModoCliente(EnumConexao con) {
+    public void initCommunication(EnumConnection con) {
         communication = new CommunicationFactory(this, con).getCommunication();
         communication.addObserver(BluetoothChat.this);
         communication.open();
@@ -127,10 +126,6 @@ public class BluetoothChat extends Activity implements Observer {
 
         return super.onOptionsItemSelected(item);
     }
-
-    /*
-    Metodos para a implementacao da Interface Observer
-     */
 
     @Override
     public void update(byte[] data) {
