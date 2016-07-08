@@ -1,4 +1,4 @@
-package com.example.samir.devicescommunication;
+package com.example.samir.activities;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -28,7 +28,6 @@ import android.widget.Toast;
 
 import com.example.samir.comunications.SettingsWifi;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,9 +41,9 @@ import java.util.ArrayList;
  * Created by Samir Sales on 19/02/15.
  */
 @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionInfoListener{
+public class WifiChat extends Activity implements WifiP2pManager.ConnectionInfoListener{
 
-    private static final String TAG = "P2PWifiChat";
+    private static final String TAG = "WifiChat";
 
     private EditText editText;
     private TextView receivedDataTextView;
@@ -252,7 +251,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
 
             @Override
             public void onFailure(int reasonCode) {
-                Toast.makeText(P2PWifiChat.this, "Falha na procura de dispositivos!", Toast.LENGTH_LONG).show();
+                Toast.makeText(WifiChat.this, "Falha na procura de dispositivos!", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -272,7 +271,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
 
             @Override
             public void onFailure(int reason) {
-                Toast.makeText(P2PWifiChat.this, "Connect failed. Retry.",
+                Toast.makeText(WifiChat.this, "Connect failed. Retry.",
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -356,7 +355,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
         public void run() {
             try {
                 serverSocket = new ServerSocket(SettingsWifi.HOST);
-                P2PWifiChat.this.runOnUiThread(new Runnable() {
+                WifiChat.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         receivedDataTextView.setText("I'm waiting here: " + serverSocket.getLocalPort());
@@ -378,7 +377,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
                         count++;
                         message += "#"+count+" from "+socket.getInetAddress()+":"+socket.getPort() + "\n";
 
-                        P2PWifiChat.this.runOnUiThread(new Runnable() {
+                        WifiChat.this.runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 receivedDataTextView.setText(message);
@@ -421,7 +420,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
 
                 message += "replayed: " + msgReply + "\n";
 
-                P2PWifiChat.this.runOnUiThread(new Runnable() {
+                WifiChat.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         receivedDataTextView.setText(message);

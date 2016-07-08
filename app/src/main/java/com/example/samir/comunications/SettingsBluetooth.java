@@ -5,7 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 
-import com.example.samir.devicescommunication.R;
+import com.example.samir.activities.R;
 
 /**
  * Created by Samir Sales on 08/07/16.

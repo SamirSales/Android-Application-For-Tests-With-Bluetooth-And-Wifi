@@ -23,7 +23,7 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.example.samir.comunications.interfaces.Observer;
-import com.example.samir.devicescommunication.R;
+import com.example.samir.activities.R;
 
 /**
  * Created by Samir Sales on 09/02/15.

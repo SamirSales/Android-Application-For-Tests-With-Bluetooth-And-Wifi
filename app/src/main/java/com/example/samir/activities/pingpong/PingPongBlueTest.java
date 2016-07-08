@@ -1,6 +1,5 @@
-package com.example.samir.devicescommunication.pingpong;
+package com.example.samir.activities.pingpong;
 
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
@@ -14,7 +13,7 @@ import com.example.samir.comunications.SettingsBluetooth;
 import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
-import com.example.samir.devicescommunication.R;
+import com.example.samir.activities.R;
 
 import java.io.IOException;
 import java.io.InputStream;

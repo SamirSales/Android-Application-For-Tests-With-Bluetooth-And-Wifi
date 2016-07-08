@@ -1,4 +1,4 @@
-package com.example.samir.devicescommunication.pingpong;
+package com.example.samir.activities.pingpong;
 
 import android.annotation.TargetApi;
 import android.os.AsyncTask;
@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.example.samir.comunications.SettingsWifi;
-import com.example.samir.devicescommunication.R;
+import com.example.samir.activities.R;
 
 import java.io.IOException;
 import java.io.InputStream;

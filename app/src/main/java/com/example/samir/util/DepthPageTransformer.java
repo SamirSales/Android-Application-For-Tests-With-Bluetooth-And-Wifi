@@ -1,4 +1,4 @@
-package com.example.samir.utils;
+package com.example.samir.util;
 
 import android.annotation.TargetApi;
 import android.os.Build;

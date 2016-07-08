@@ -1,14 +1,12 @@
-package com.example.samir.devicescommunication;
+package com.example.samir.activities;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -55,6 +53,7 @@ public class BluetoothChat extends Activity implements Observer {
                 working_as_server = false;
                 initClientConnection();
             }
+
             @Override
             public void onServerClick(DialogInterface dialog, int id) {
                 working_as_server = true;

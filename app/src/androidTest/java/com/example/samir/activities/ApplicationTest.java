@@ -1,4 +1,4 @@
-package com.example.samir.devicescommunication;
+package com.example.samir.activities;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

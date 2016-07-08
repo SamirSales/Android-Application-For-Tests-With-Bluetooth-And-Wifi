@@ -7,7 +7,7 @@ import android.util.Log;
 
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
-import com.example.samir.devicescommunication.R;
+import com.example.samir.activities.R;
 
 import java.io.IOException;
 import java.io.InputStream;

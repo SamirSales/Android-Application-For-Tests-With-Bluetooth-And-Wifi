@@ -1,4 +1,4 @@
-package com.example.samir.devicescommunication.pingpong;
+package com.example.samir.activities.pingpong;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -14,7 +14,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.example.samir.devicescommunication.R;
+import com.example.samir.activities.R;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -1,4 +1,4 @@
-package com.example.samir.devicescommunication;
+package com.example.samir.activities;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -19,7 +19,7 @@ import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.interfaces.Observer;
 import com.example.samir.comunications.threads.BluetoothConnectedThread;
 import com.example.samir.objects.ImageItem;
-import com.example.samir.utils.DepthPageTransformer;
+import com.example.samir.util.DepthPageTransformer;
 
 import java.io.IOException;
 import java.util.ArrayList;
