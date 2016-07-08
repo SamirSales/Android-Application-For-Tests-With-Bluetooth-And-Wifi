@@ -27,7 +27,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.samir.comunications.SettingsWifi;
-import com.example.samir.testOfComunication.Utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -58,8 +57,6 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
     private WifiP2pManager.Channel mChannel;
     private WifiP2pManager mManager;
 
-    private boolean wifiP2pEnabled;
-
     private MyClientTask myClientTask;
     private ArrayList<String> arrayMessageToRead;
     private ArrayList<String> arrayMessageToSend;
@@ -71,7 +68,6 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
     private ArrayList<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
 
     private WifiP2pManager.PeerListListener peerListListener;
-    private ConnectServerWifi connectServerWifi;
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
@@ -149,8 +145,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
     }
 
     public void updateStatusOfConnection(){
-        final String ip = Utils.getIPAddress(true);
-        connectionNotification("server:" + SettingsWifi.IP_SERVER + " porta:" + SettingsWifi.HOST);
+        connectionNotification("server:" + SettingsWifi.IP_SERVER + " host:" + SettingsWifi.HOST);
     }
 
     public void connectionNotification(final String mgs){
@@ -324,10 +319,8 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
 
                 int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1);
                 if (state == WifiP2pManager.WIFI_P2P_STATE_ENABLED) {
-                    wifiP2pEnabled = true;
                     Log.i(TAG, "wifiP2pEnabled = true;");
                 } else {
-                    wifiP2pEnabled = false;
                     Log.i(TAG, "wifiP2pEnabled = false;");
                 }
 
@@ -350,9 +343,8 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
         }
     }
 
-
-    String message = "";
-    ServerSocket serverSocket;
+    private String message = "";
+    private ServerSocket serverSocket;
 
     private class SocketServerThread extends Thread {
         int count = 0;
@@ -402,41 +394,16 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
 
             } catch (IOException e) {e.printStackTrace();}
         }
-
-        public void write(byte[] bytes){
-
-            if(outputStream != null){
-                try {
-                    outputStream.write(bytes);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
     }
 
     private class SocketServerReplyThread extends Thread {
 
         private Socket hostThreadSocket;
-        int cnt;
+        private int cnt;
 
-        SocketServerReplyThread(Socket socket, int c) {
+        public SocketServerReplyThread(Socket socket, int c) {
             hostThreadSocket = socket;
             cnt = c;
-        }
-
-        public void myPrint(String msg){
-            OutputStream outputStream;
-            try {
-                outputStream = hostThreadSocket.getOutputStream();
-                PrintStream printStream = new PrintStream(outputStream);
-                printStream.print(msg);
-                printStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
 
         @Override
@@ -450,7 +417,6 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
                 inputStream = hostThreadSocket.getInputStream();
                 PrintStream printStream = new PrintStream(outputStream);
                 printStream.print(msgReply);
-                //printStream.close();
                 updateStatusOfConnection();
 
                 message += "replayed: " + msgReply + "\n";
@@ -488,12 +454,11 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
                     @Override
                     public void run() {
                         byte[] buffer = new byte[1024];  // buffer store for the stream
-                        int bytes; // bytes returned from read()
                         //se tiver algo no read(), imprime
                         while (true){
                             try {
                                 // Read from the InputStream
-                                bytes = inputStream2.read(buffer);
+                                inputStream2.read(buffer);
                                 // Send the obtained bytes to the UI activity
                                 String str = new String (buffer);
                                 str = str.trim();
@@ -502,13 +467,10 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
 
                                 if(arrayMessageToRead.size()>0){
                                     for(String str2 : arrayMessageToRead){
-                                        Log.i(TAG, "arrayMessage.get(i)="+str2);
-                                        //printStream2.print(str2);
                                         updateTextView("Outro usuario: "+str2);
                                     }
-                                    arrayMessageToRead = new ArrayList<String>();
+                                    arrayMessageToRead = new ArrayList<>();
                                 }
-
                             } catch (IOException e) {
                                 Log.e(TAG, e.getMessage());
                             }
@@ -521,7 +483,6 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
                 e.printStackTrace();
                 message += "Something wrong! " + e.toString() + "\n";
             }
-
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -534,38 +495,17 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
 
     public class MyClientTask extends AsyncTask {
 
-        Socket socket;
-        InputStream mmInStream;
-        OutputStream mmOutStream;
+        private Socket socket;
+        private InputStream mmInStream;
+        private OutputStream mmOutStream;
 
-        String ip;
-        int porta;
+        private String ip;
+        private int host;
+        private PrintStream printStream;
 
-        String response = "";
-
-        //alteracoes...
-        boolean myClientIsRunning;
-        ByteArrayOutputStream byteArrayOutputStream;
-        PrintStream printStream;
-
-        MyClientTask(String ip, int porta) throws IOException {
+        private MyClientTask(String ip, int host) throws IOException {
             this.ip = ip;
-            this.porta = porta;
-            myClientIsRunning = false;
-        }
-
-        /* Call this from the main activity to send data to the remote device */
-        public void write(byte[] bytes) {
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) { }
-        }
-
-        /* Call this from the main activity to shutdown the connection */
-        public void cancel() {
-            try {
-                socket.close();
-            } catch (IOException e) { }
+            this.host = host;
         }
 
         @Override
@@ -574,7 +514,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
             OutputStream tmpOut = null;
 
             try {
-                socket = new Socket(ip,porta);
+                socket = new Socket(ip, host);
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
             } catch (UnknownHostException e) {
@@ -587,7 +527,7 @@ public class P2PWifiChat extends Activity implements WifiP2pManager.ConnectionIn
             mmOutStream = tmpOut;
 
             if(socketServerThread == null){
-                connectionNotification("client porta:" + SettingsWifi.HOST);
+                connectionNotification("client host:" + SettingsWifi.HOST);
             }
 
             printStream = new PrintStream(mmOutStream);

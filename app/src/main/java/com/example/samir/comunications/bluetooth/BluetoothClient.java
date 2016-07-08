@@ -1,4 +1,4 @@
-package com.example.samir.comunications;
+package com.example.samir.comunications.bluetooth;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.example.samir.comunications;
+package com.example.samir.comunications.bluetooth;
 
 import android.app.Activity;
 import android.app.ProgressDialog;

@@ -6,9 +6,10 @@ package com.example.samir.comunications;
 
 import android.app.Activity;
 
+import com.example.samir.comunications.bluetooth.BluetoothClient;
+import com.example.samir.comunications.bluetooth.BluetoothServer;
 import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
-import com.example.samir.testOfComunication.BluetoothPingTest;
 
 public class CommunicationFactory {
     private EnumConnection mode;
@@ -23,8 +24,6 @@ public class CommunicationFactory {
             //communication = new WiFi(parent);
         } else if (mode == EnumConnection.BLUETOOTH_CLIENT) {
             communication = new BluetoothClient(parent);
-        } else if (mode == EnumConnection.BLUETOOTH_PING_TEST) {
-            communication = new BluetoothPingTest(parent);
         } else if (mode == EnumConnection.BLUETOOTH_SERVER) {
             communication = new BluetoothServer(parent);
         }

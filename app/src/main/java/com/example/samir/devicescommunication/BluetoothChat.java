@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.samir.comunications.SettingsBluetooth;
 import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
@@ -48,7 +49,18 @@ public class BluetoothChat extends Activity implements Observer {
     }
 
     public void connectAction(View view){
-        dialogBluetoothConnection();
+        SettingsBluetooth.dialogBluetoothConnectionMode(this, new SettingsBluetooth.OnBluetoothConnectionMode() {
+            @Override
+            public void onClientClick(DialogInterface dialog, int id) {
+                working_as_server = false;
+                initClientConnection();
+            }
+            @Override
+            public void onServerClick(DialogInterface dialog, int id) {
+                working_as_server = true;
+                initServerConnection();
+            }
+        });
     }
 
     private void newLineTextView(final String text){
@@ -58,25 +70,6 @@ public class BluetoothChat extends Activity implements Observer {
                 messageReceivedTextView.setText(messageReceivedTextView.getText().toString() + text + "\n");
             }
         });
-    }
-
-    private void dialogBluetoothConnection(){
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Conexão Bluetooth");
-        builder.setMessage("Conectar-se como...");
-        builder.setPositiveButton("cliente", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                working_as_server = false;
-                initClientConnection();
-            }
-        });
-        builder.setNegativeButton("servidor", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                working_as_server = true;
-                initServerConnection();
-            }
-        });
-        builder.show();
     }
 
     /**

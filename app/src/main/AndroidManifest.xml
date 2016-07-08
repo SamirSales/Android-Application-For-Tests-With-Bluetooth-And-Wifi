@@ -30,7 +30,7 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity android:name="com.example.samir.devicescommunication.TestImagens">
+        <activity android:name=".ImagePagerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>

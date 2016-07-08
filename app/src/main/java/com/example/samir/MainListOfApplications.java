@@ -13,7 +13,7 @@ import com.example.samir.devicescommunication.P2PWifiChat;
 import com.example.samir.devicescommunication.pingpong.PingPongBlueTest;
 import com.example.samir.devicescommunication.pingpong.PingPongWifiTest;
 import com.example.samir.devicescommunication.R;
-import com.example.samir.devicescommunication.TestImagens;
+import com.example.samir.devicescommunication.ImagePagerActivity;
 
 /**
  * Created by Samir Sales on 19/02/15.
@@ -52,7 +52,7 @@ public class MainListOfApplications extends Activity implements AdapterView.OnIt
                 startActivity(intent0);
                 break;
             case 1:
-                Intent intent1 = new Intent(this, TestImagens.class);
+                Intent intent1 = new Intent(this, ImagePagerActivity.class);
                 startActivity(intent1);
                 break;
             case 2:

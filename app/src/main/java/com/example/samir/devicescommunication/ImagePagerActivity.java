@@ -17,7 +17,8 @@ import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.CommunicationFactory;
 import com.example.samir.comunications.interfaces.Observer;
-import com.example.samir.objects.ImagemComStr;
+import com.example.samir.comunications.threads.BluetoothConnectedThread;
+import com.example.samir.objects.ImageItem;
 import com.example.samir.utils.DepthPageTransformer;
 
 import java.io.IOException;
@@ -28,18 +29,17 @@ import java.util.UUID;
  * Created by Samir Sales on 10/02/15.
  */
 
-public class TestImagens extends Activity implements Observer {
+public class ImagePagerActivity extends Activity implements Observer {
 
-    private String TAG = "TestImagens";
+    private String TAG = "ImagePagerActivity";
 
     private android.support.v4.view.ViewPager pager;
     private Button serverBtn;
     private Button clientBtn;
-    private TextView textConectado;
+    private TextView connectionTextView;
 
-    private static ConnectedThread connectedThreadServer;
+    private static BluetoothConnectedThread bluetoothConnectedThreadServer;
     private static boolean connectionStarted;
-    private boolean working_as_server;
     private Communication communication = null;
 
     private AcceptThread aTh;
@@ -53,63 +53,50 @@ public class TestImagens extends Activity implements Observer {
 
         serverBtn = (Button)findViewById(R.id.serverBtn);
         clientBtn = (Button)findViewById(R.id.clientBtn);
-        textConectado = (TextView)findViewById(R.id.textConectado);
+        connectionTextView = (TextView)findViewById(R.id.textConectado);
         pager = (ViewPager)findViewById(R.id.pager);
         pager.setPageTransformer(true, new DepthPageTransformer());
 
-        connectedThreadServer = null;
+        bluetoothConnectedThreadServer = null;
 
-        ArrayList<ImagemComStr> arrayList = new ArrayList<ImagemComStr>();
-        arrayList.add(new ImagemComStr(R.drawable.image1,"Lobo"));
-        arrayList.add(new ImagemComStr(R.drawable.image2,"Arara"));
-        arrayList.add(new ImagemComStr(R.drawable.image3,"Carro"));
-        arrayList.add(new ImagemComStr(R.drawable.image4,"Leão"));
+        ArrayList<ImageItem> arrayList = new ArrayList<ImageItem>();
+        arrayList.add(new ImageItem(R.drawable.image1,"Lobo"));
+        arrayList.add(new ImageItem(R.drawable.image2,"Arara"));
+        arrayList.add(new ImageItem(R.drawable.image3,"Carro"));
+        arrayList.add(new ImageItem(R.drawable.image4,"Leão"));
 
-        myPagerAdapter = new MyPagerAdapter(this,arrayList, connectedThreadServer);
+        myPagerAdapter = new MyPagerAdapter(this,arrayList, bluetoothConnectedThreadServer);
         pager.setAdapter(myPagerAdapter);
     }
 
     public void buttonActionServer(View view){
-        working_as_server = true;
         aTh  = new AcceptThread();
         aTh.start();
     }
 
     public void buttonActionClient(View view){
-        working_as_server = false;
         initConnection();
     }
 
     public void initConnection() {
         if(!connectionStarted){
-            iniciarComunicacao(EnumConnection.BLUETOOTH_CLIENT);
+            initCommunication(EnumConnection.BLUETOOTH_CLIENT);
             connectionStarted = true;
         }
     }
 
-    public void iniciarComunicacao(EnumConnection con) {
+    public void initCommunication(EnumConnection con) {
         communication = new CommunicationFactory(this, con).getCommunication();
-        communication.addObserver(TestImagens.this);
+        communication.addObserver(ImagePagerActivity.this);
         communication.open();
-    }
-
-    public void sendMessage(){
-        if(working_as_server){
-
-            if(connectedThreadServer != null){
-                byte[] bytes = {1,1};
-                connectedThreadServer.write(bytes);
-            }
-        }
     }
 
     @Override
     public void update(byte[] data) {
-        Log.i(TAG, "press");
-        byte tipo = data[0];
+        byte type = data[0];
 
-        switch (tipo){
-            case ImagemComStr.UPDATE_PAGE:
+        switch (type){
+            case ImageItem.UPDATE_PAGE:
                 final byte pagina = data[1];
                 runOnUiThread(new Runnable() {
                     @Override
@@ -119,18 +106,17 @@ public class TestImagens extends Activity implements Observer {
                 });
 
                 break;
-            case ImagemComStr.PRESS_PAGE:
+            case ImageItem.PRESS_PAGE:
                 final int position = pager.getCurrentItem();
-                final ImagemComStr im = myPagerAdapter.getArrayICS().get(position);
+                final ImageItem imageItem = myPagerAdapter.getArrayICS().get(position);
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Toast.makeText(TestImagens.this,im.getTitulo(),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ImagePagerActivity.this,imageItem.getTitle(),Toast.LENGTH_SHORT).show();
                     }
                 });
                 break;
             default:
-                Log.i(TAG, "press "+tipo);
                 break;
         }
     }
@@ -144,8 +130,8 @@ public class TestImagens extends Activity implements Observer {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textConectado.setVisibility(View.VISIBLE);
-                            textConectado.setText("CLIENTE");
+                            connectionTextView.setVisibility(View.VISIBLE);
+                            connectionTextView.setText("CLIENTE");
                             serverBtn.setVisibility(View.GONE);
                             clientBtn.setVisibility(View.GONE);
                         }
@@ -160,7 +146,7 @@ public class TestImagens extends Activity implements Observer {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        textConectado.setVisibility(View.INVISIBLE);
+                        connectionTextView.setVisibility(View.INVISIBLE);
                         serverBtn.setVisibility(View.VISIBLE);
                         clientBtn.setVisibility(View.VISIBLE);
                     }
@@ -177,12 +163,9 @@ public class TestImagens extends Activity implements Observer {
     private class AcceptThread extends Thread {
         private final BluetoothServerSocket mmServerSocket;
 
-        private boolean thread_ativa;
-
         public AcceptThread() {
             // Use a temporary object that is later assigned to mmServerSocket,
             // because mmServerSocket is final
-            thread_ativa = false;
             BluetoothServerSocket tmp = null;
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             try {
@@ -193,17 +176,16 @@ public class TestImagens extends Activity implements Observer {
         }
 
         public void run() {
-            BluetoothSocket socket = null;
+            BluetoothSocket socket;
             // Keep listening until exception occurs or a socket is returned
             while (true) {
                 try {
                     socket = mmServerSocket.accept();
-                    thread_ativa = true;
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textConectado.setVisibility(View.VISIBLE);
-                            textConectado.setText("SERVIDOR");
+                            connectionTextView.setVisibility(View.VISIBLE);
+                            connectionTextView.setText("SERVIDOR");
                             serverBtn.setVisibility(View.GONE);
                             clientBtn.setVisibility(View.GONE);
                         }
@@ -229,24 +211,15 @@ public class TestImagens extends Activity implements Observer {
 
         private void manageConnectedSocket(BluetoothSocket socket) {
             final ArrayList<String> arrayMessage = new ArrayList<String>();
-            connectedThreadServer =  new ConnectedThread(socket, arrayMessage);
-            connectedThreadServer.start();
-            myPagerAdapter.setConnectedThreadServer(connectedThreadServer);
+            bluetoothConnectedThreadServer =  new BluetoothConnectedThread(socket, arrayMessage);
+            bluetoothConnectedThreadServer.start();
+            myPagerAdapter.setBluetoothConnectedThreadServer(bluetoothConnectedThreadServer);
 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     while(true){
-
                         for(int i=0; i<arrayMessage.size();i++){
-                            final String str = arrayMessage.get(i);
-
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    //newLineTextView("Recebido:"+str); TODO
-                                }
-                            });
                             arrayMessage.remove(i);
                             if(i>-1){ i--; }
                         }

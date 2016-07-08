@@ -1,4 +1,4 @@
-package com.example.samir.comunications;
+package com.example.samir.comunications.bluetooth;
 
 import android.annotation.TargetApi;
 import android.app.Activity;

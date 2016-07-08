@@ -9,8 +9,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.example.samir.devicescommunication.ConnectedThread;
-import com.example.samir.objects.ImagemComStr;
+import com.example.samir.comunications.threads.BluetoothConnectedThread;
+import com.example.samir.objects.ImageItem;
 
 import java.util.ArrayList;
 
@@ -19,23 +19,23 @@ import java.util.ArrayList;
  */
 public class MyPagerAdapter extends PagerAdapter {
 
-    private ArrayList<ImagemComStr> arrayICS;
+    private ArrayList<ImageItem> arrayICS;
     private int NumberOfPages;
     private Context context;
-    private ConnectedThread connectedThreadServer;
+    private BluetoothConnectedThread bluetoothConnectedThreadServer;
 
-    public MyPagerAdapter(Context context, ArrayList<ImagemComStr> arrayICS, ConnectedThread connectedThreadServer){
+    public MyPagerAdapter(Context context, ArrayList<ImageItem> arrayICS, BluetoothConnectedThread bluetoothConnectedThreadServer){
         this.arrayICS = arrayICS;
         NumberOfPages = arrayICS.size();
         this.context = context;
-        this.connectedThreadServer = connectedThreadServer;
+        this.bluetoothConnectedThreadServer = bluetoothConnectedThreadServer;
     }
 
-    public void setConnectedThreadServer(ConnectedThread connectedThreadServer){
-        this.connectedThreadServer = connectedThreadServer;
+    public void setBluetoothConnectedThreadServer(BluetoothConnectedThread bluetoothConnectedThreadServer){
+        this.bluetoothConnectedThreadServer = bluetoothConnectedThreadServer;
     }
 
-    public ArrayList<ImagemComStr> getArrayICS(){
+    public ArrayList<ImageItem> getArrayICS(){
         return arrayICS;
     }
 
@@ -46,9 +46,9 @@ public class MyPagerAdapter extends PagerAdapter {
 
     @Override
     public void setPrimaryItem(ViewGroup container, int position, Object object){
-        ImagemComStr imagemComStr = arrayICS.get(position);
-        if(connectedThreadServer != null){
-            imagemComStr.actionUpDateImageCS(position, connectedThreadServer);
+        ImageItem imageItem = arrayICS.get(position);
+        if(bluetoothConnectedThreadServer != null){
+            imageItem.actionUpDateImageCS(position, bluetoothConnectedThreadServer);
         }
     }
 
@@ -62,9 +62,9 @@ public class MyPagerAdapter extends PagerAdapter {
 
         ImageView imageView = new ImageView(context);
 
-        final ImagemComStr imagemComStr = arrayICS.get(position);
+        final ImageItem imageItem = arrayICS.get(position);
 
-        imageView.setImageResource(imagemComStr.getImageResourse());
+        imageView.setImageResource(imageItem.getImageResource());
 
 
         LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
@@ -75,7 +75,7 @@ public class MyPagerAdapter extends PagerAdapter {
         layout.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-        layout.setBackgroundColor(imagemComStr.getColor());
+        layout.setBackgroundColor(imageItem.getColor());
         layout.setLayoutParams(layoutParams);
         layout.addView(imageView);
 
@@ -84,13 +84,13 @@ public class MyPagerAdapter extends PagerAdapter {
             public void onClick(View v) {
 
                 Toast.makeText(context,
-                        imagemComStr.getTitulo(), Toast.LENGTH_SHORT).show();
-                if(connectedThreadServer != null){
-                    imagemComStr.actionPressPageImageCS(connectedThreadServer);
+                        imageItem.getTitle(), Toast.LENGTH_SHORT).show();
+                if(bluetoothConnectedThreadServer != null){
+                    imageItem.actionPressPageImageCS(bluetoothConnectedThreadServer);
                 }
             }});
 
-        Log.i("TestImagens", "COMANDO " + position);
+        Log.i("ImagePagerActivity", "COMANDO " + position);
         container.addView(layout);
         return layout;
     }

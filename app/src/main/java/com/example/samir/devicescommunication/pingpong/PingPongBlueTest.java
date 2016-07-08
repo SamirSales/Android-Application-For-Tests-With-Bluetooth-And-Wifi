@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.example.samir.comunications.CommunicationFactory;
+import com.example.samir.comunications.SettingsBluetooth;
 import com.example.samir.comunications.enums.EnumConnection;
 import com.example.samir.comunications.interfaces.Communication;
 import com.example.samir.comunications.interfaces.Observer;
@@ -44,21 +45,17 @@ public class PingPongBlueTest extends PingPongActivity implements Observer {
     }
 
     public void connectAction(View view){
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Conexão Bluetooth");
-        builder.setMessage("Conectar-se como...");
-        builder.setPositiveButton("cliente", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
+        SettingsBluetooth.dialogBluetoothConnectionMode(this, new SettingsBluetooth.OnBluetoothConnectionMode() {
+            @Override
+            public void onClientClick(DialogInterface dialog, int id) {
                 initConnection();
             }
-        });
-        builder.setNegativeButton("servidor", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
+            @Override
+            public void onServerClick(DialogInterface dialog, int id) {
                 acceptThread = new AcceptThread();
                 acceptThread.start();
             }
         });
-        builder.show();
     }
 
     public void initConnection() {

@@ -8,8 +8,7 @@ public enum EnumConnection {
     BLUETOOTH_CLIENT(1),
     WIFI(2),
     USB(3),
-    BLUETOOTH_PING_TEST(4),
-    BLUETOOTH_SERVER(5);
+    BLUETOOTH_SERVER(4);
 
     private int valor;
 
