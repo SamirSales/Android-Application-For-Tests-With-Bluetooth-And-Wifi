@@ -40,8 +40,6 @@ public class WifiChat extends Activity{
     private ArrayList<String> arrayMessageToRead;
     private ArrayList<String> arrayMessageToSend;
 
-//    private SocketServerThread socketServerThread;
-
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     @Override
     public void onCreate(Bundle bundle){
@@ -50,7 +48,6 @@ public class WifiChat extends Activity{
 
         arrayMessageToRead = new ArrayList<>();
         arrayMessageToSend = new ArrayList<>();
-//        socketServerThread = null;
         myClientTask = null;
 
         editText = (EditText)findViewById(R.id.editText);
@@ -200,7 +197,6 @@ public class WifiChat extends Activity{
                 outputStream = hostThreadSocket.getOutputStream();
                 inputStream = hostThreadSocket.getInputStream();
                 printStream = new PrintStream(outputStream);
-//                printStream.print(msgReply);
                 arrayMessageToSend.add(msgReply);
                 updateStatusOfConnection();
 
@@ -251,7 +247,7 @@ public class WifiChat extends Activity{
             OutputStream tmpOut = null;
 
             try {
-                socket = new Socket(ip, host);//TODO NO HOST FOUND
+                socket = new Socket(ip, host);
                 tmpIn = socket.getInputStream();
                 tmpOut = socket.getOutputStream();
             } catch (UnknownHostException e) {
